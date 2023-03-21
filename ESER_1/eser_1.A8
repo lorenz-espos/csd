@@ -1,0 +1,13 @@
+*Scrivere un programma assembly per contare il numero di bit alti in una word, 
+*utilizzando un sottoprogramma che conta il numero di bit alti in un byte
+    ORG $8000
+START   
+VET DC.W 1
+N   EQU 16
+    LEA VET,A0  *punto alla testa di VET mediante il registro A0
+
+
+
+LOOP
+
+    END START

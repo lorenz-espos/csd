@@ -1,0 +1,26 @@
+00000000                                     1  *Scrivere un programma assembly per contare il numero di bit alti in una word, 
+00000000                                     2  *utilizzando un sottoprogramma che conta il numero di bit alti in un byte.
+00000000                                     3  
+00008000                                     4      ORG $8000
+00008000  000E                               5  VET DC.W    14
+00008002                                     6  COUNT   
+00008002  5241                               7          ADD #1,D1
+00008004  4EF9 0000810A                      8          JMP LOOP
+00008100                                     9      ORG $8100
+00008100                                    10  START
+00008100  41F9 00008000                     11      LEA VET,A0
+00008106  3010                              12      MOVE.W (A0),D0
+00008108  4241                              13      CLR.W   D1
+0000810A                                    14  
+0000810A  E248                              15  LOOP    LSR #1,D0
+0000810C  6500 FEF4                         16          BCS COUNT
+00008110  B07C 0000                         17          CMP #0,D0
+00008114  66F4                              18      BNE LOOP
+00008116                                    19  
+00008116                                    20  
+00008116                                    21  
+00008116                                    22  
+00008116                                    23      END START
+
+No errors detected
+No warnings generated

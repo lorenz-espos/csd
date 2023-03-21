@@ -1,0 +1,21 @@
+00000000                                     1  *SCRIVERE UN VETTORE DI 1
+00008000                                     2      ORG $8000
+00008000                                     3  START
+00008000  =00000004                          4  N   EQU 4
+00008000                                     5  VET DS.W N
+00008008  303C 0000                          6      MOVE.W #0,D0
+0000800C  41F9 00008000                      7      LEA VET,A0  *punto alla testa di VET mediante il registro A0
+00008012  30FC 0001                          8  LOOP    MOVE.W  #1,(A0)+
+00008016  5240                               9          ADD.W   #1,D0
+00008018                                    10  
+00008018  B07C 0004                         11      CMP #N,D0
+0000801C  66F4                              12      BNE LOOP
+0000801E                                    13  
+0000801E                                    14  
+0000801E                                    15  
+0000801E                                    16  
+0000801E                                    17  
+0000801E                                    18      END START
+
+No errors detected
+No warnings generated

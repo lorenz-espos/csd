@@ -1,0 +1,28 @@
+*SCRIVERE UN VETTORE DI 1
+    ORG $8000
+START
+N   EQU 4
+VET DS.W N
+    MOVE.W #0,D0
+    LEA VET,A0  *punto alla testa di VET mediante il registro A0
+LOOP    MOVE.W  #1,(A0)+
+        ADD.W   #1,D0
+
+    CMP #N,D0
+    BNE LOOP
+
+
+
+
+
+    END START
+
+
+
+
+
+
+
+
+
+

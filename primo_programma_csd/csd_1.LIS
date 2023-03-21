@@ -1,0 +1,16 @@
+00006000                                     1  	ORG	$6000
+00006000  2079 00000000                      2  	MOVEA.L	B,A0
+ERROR: Undefined symbol
+00006006  3279 00000000                      3  	MOVE.W 	A,A1
+ERROR: Undefined symbol
+0000600C  4EB9 00007000                      4  	JSR	PIPPO
+00006012                                     5  
+00006012                                     6  
+00007000                                     7  	ORG $7000
+00007000                                     8  PIPPO 
+00007000                                     9  	MOVE .W D0,(A0)
+ERROR: Invalid syntax
+00007000  4E75                              10  	RTS 
+
+3 errors detected
+No warnings generated

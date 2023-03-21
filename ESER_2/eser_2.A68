@@ -1,0 +1,32 @@
+*Scrivere un programma assembly per contare il numero di bit alti in una word, 
+*utilizzando un sottoprogramma che conta il numero di bit alti in un byte.
+
+    ORG $8000
+VET DC.W    14
+COUNT   
+        ADD #1,D1
+        JMP LOOP
+    ORG $8100
+START
+    LEA VET,A0
+    MOVE.W (A0),D0
+    CLR.W   D1
+
+LOOP    LSR #1,D0
+        BCS COUNT
+        CMP #0,D0
+    BNE LOOP
+
+
+
+
+    END START
+
+
+
+
+
+
+
+
+
