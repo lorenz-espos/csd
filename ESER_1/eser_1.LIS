@@ -1,21 +1,26 @@
 00000000                                     1  *SCRIVERE UN VETTORE DI 1
 00008000                                     2      ORG $8000
-00008000                                     3  START
-00008000  =00000004                          4  N   EQU 4
-00008000                                     5  VET DS.W N
-00008008  303C 0000                          6      MOVE.W #0,D0
-0000800C  41F9 00008000                      7      LEA VET,A0  *punto alla testa di VET mediante il registro A0
-00008012  30FC 0001                          8  LOOP    MOVE.W  #1,(A0)+
-00008016  5240                               9          ADD.W   #1,D0
-00008018                                    10  
-00008018  B07C 0004                         11      CMP #N,D0
-0000801C  66F4                              12      BNE LOOP
-0000801E                                    13  
-0000801E                                    14  
-0000801E                                    15  
-0000801E                                    16  
-0000801E                                    17  
-0000801E                                    18      END START
+00008000  =00000004                          3  N   EQU 4
+00008000                                     4  VET DS.W    N
+00008008                                     5  
+00008008                                     6  
+00008008                                     7  SOM 
+00008008  5240                               8      ADD.W   #1,D0
+0000800A  4E75                               9      RTS
+00008100                                    10      ORG $8100
+00008100                                    11  
+00008100                                    12  START
+00008100                                    13  *inizializzo il registro D0
+00008100  4240                              14      CLR D0
+00008102  41F9 00008000                     15      LEA VET,A0  *punto alla testa di VET mediante il registro A0
+00008108                                    16  LOOP
+00008108  30BC 0001                         17      MOVE.W  #1,(A0)
+0000810C  D0FC 0002                         18      ADDA    #2,A0
+00008110  4EB9 00008008                     19      JSR SOM
+00008116  B07C 0004                         20      CMP #N,D0
+0000811A  66EC                              21      BNE LOOP
+0000811C                                    22  
+0000811C                                    23      END START
 
 No errors detected
 No warnings generated
