@@ -7,26 +7,34 @@
 00008002                                     7  
 00008002                                     8  *inserisco il sottoprogramma per il conteggio
 00008002                                     9  COUNT   
-00008002  5241                              10          ADD #1,D1
-00008004  4EF9 0000810A                     11          JMP LOOP
-00008100                                    12      ORG $8100
-00008100                                    13  START
-00008100                                    14  *creo il puntatore alla prima variabile del vettore
-00008100  41F9 00008000                     15      LEA VET,A0
-00008106  3010                              16      MOVE.W (A0),D0
-00008108                                    17  *sposto il valore del primo elemento del vettore nel registro D0
-00008108  4241                              18      CLR.W   D1
-0000810A                                    19  *creo un loop in cui mediante lo shift register controlliamo il numero di bit pari ad 1
-0000810A                                    20  *il numero bit pari ad 1 vengono salvati nel registro D1
-0000810A  E248                              21  LOOP    LSR #1,D0
-0000810C  6500 FEF4                         22          BCS COUNT
-00008110  B07C 0000                         23          CMP #0,D0
-00008114  66F4                              24      BNE LOOP
-00008116                                    25  
-00008116                                    26  
-00008116                                    27  
-00008116                                    28  
-00008116                                    29      END START
+00008002  4E56 0000                         10          LINK A6,#0
+00008006  3F40 0002                         11          MOVE.W D0,2(SP)
+0000800A  4240                              12          CLR D0
+0000800C  3001                              13          MOVE.W D1,D0
+0000800E  5240                              14          ADD #1,D0
+00008010  3200                              15          MOVE.W D0,D1
+00008012  302E 0002                         16          MOVE.W 2(A6),D0
+00008016  4E5E                              17          UNLK A6
+00008018                                    18          *ADD #1,D1
+00008018  4EF9 0000810A                     19          JMP LOOP
+00008100                                    20      ORG $8100
+00008100                                    21  START
+00008100                                    22  *creo il puntatore alla prima variabile del vettore
+00008100  41F9 00008000                     23      LEA VET,A0
+00008106  3010                              24      MOVE.W (A0),D0
+00008108                                    25  *sposto il valore del primo elemento del vettore nel registro D0
+00008108  4241                              26      CLR.W   D1
+0000810A                                    27  *creo un loop in cui mediante lo shift register controlliamo il numero di bit pari ad 1
+0000810A                                    28  *il numero bit pari ad 1 vengono salvati nel registro D1
+0000810A  E248                              29  LOOP    LSR #1,D0
+0000810C  6500 FEF4                         30          BCS COUNT
+00008110  B07C 0000                         31          CMP #0,D0
+00008114  66F4                              32      BNE LOOP
+00008116                                    33  
+00008116                                    34  
+00008116                                    35  
+00008116                                    36  
+00008116                                    37      END START
 
 No errors detected
 No warnings generated

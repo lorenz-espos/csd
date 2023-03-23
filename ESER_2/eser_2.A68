@@ -7,7 +7,14 @@ VET DC.W    14
 
 *inserisco il sottoprogramma per il conteggio
 COUNT   
-        ADD #1,D1
+        LINK A6,#0
+        MOVE.W D0,2(SP)
+        CLR D0
+        MOVE.W D1,D0
+        ADD #1,D0
+        MOVE.W D0,D1
+        MOVE.W 2(A6),D0
+        UNLK A6
         JMP LOOP
     ORG $8100
 START
@@ -27,6 +34,17 @@ LOOP    LSR #1,D0
 
 
     END START
+
+
+
+
+
+
+
+
+
+
+
 
 
 
