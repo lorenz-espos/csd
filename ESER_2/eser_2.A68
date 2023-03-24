@@ -15,7 +15,7 @@ COUNT
         MOVE.W D0,D1
         MOVE.W 2(A6),D0
         UNLK A6
-        RTS
+        JMP LOOP
     ORG $8100
 START
 *creo il puntatore alla prima variabile del vettore
@@ -26,7 +26,7 @@ START
 *creo un loop in cui mediante lo shift register controlliamo il numero di bit pari ad 1
 *il numero bit pari ad 1 vengono salvati nel registro D1
 LOOP    LSR #1,D0
-        JSR COUNT
+        BCS COUNT
         CMP #0,D0
     BNE LOOP
 
@@ -34,6 +34,7 @@ LOOP    LSR #1,D0
 
 
     END START
+
 
 
 
