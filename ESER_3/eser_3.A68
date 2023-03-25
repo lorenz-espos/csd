@@ -3,16 +3,30 @@
     ORG $8000
 *AREA DI MEMORIA E DEFINIZIONE PARAMETRI
 MAT DC.W    11,20,30,68,9,190,3,2,1
-NC  DC.W 3
-NR  DC.W 3
+NC  DC.W    3
+NR  DC.W    3
 MAX DC.W    0
 MIN DC.W    655
+RMA DS.W    1
+RMI DS.W    1
+VET DS.W    1
+VTB DS.W    1
 *FUNZIONI PER L'AGGIORNAMENTO DEL MAX E DEL MIN
+
 MAXC    MOVE.W  D2,(A1)
+    MOVE.W D1,(A5)
     JMP RET
 
 MINC    MOVE.W  D2,(A2)
+    MOVE.W  D1,(A5)
     JMP RT
+
+INITA
+    *LIBERO I REGISTRI A1 E A2
+    SUBA.L  A1,A1
+    SUBA.L  A2,A2
+    SUBA.L  A5,A5
+    RTS
 
     ORG $8100
 *AREA DELLE SUBROUTINE
@@ -47,6 +61,7 @@ RET ADD #1,D0
     CMP D0,D5
     BNE ALOOP
     ADD #1,D1
+    *D1 è la riga temporanea
     CMP D1,D4
     BNE LOOP
     MOVE.L  32(A6),A3
@@ -59,6 +74,10 @@ RET ADD #1,D0
 
 
 FMIN
+    *in questo caso mi salvo solo A0 sullo stack 
+    *gli altri registri dopo non mi serviranno più
+    LINK    A6,#0
+    MOVE.L  A0,8(A6)
 *pulisco i registri
     CLR D0
     CLR D1
@@ -83,8 +102,50 @@ RT  ADD #1,D0
     CMP D0,D5
     BNE CLOOP
     ADD #1,D1
+    *D1 è la riga temporanea
     CMP D1,D4
     BNE BLOOP
+    MOVE.L  8(A6),A0    
+    UNLK    A6
+    RTS
+
+FILL
+    CLR D0
+    CLR D1
+    CLR D2
+    CLR D3
+    CLR D4
+    CLR D5
+    MOVE.W  (A1),D0
+    MOVE.W  (A2),D1
+    MOVE.W  (A3),D2
+    *inizializzo il registro  D0 e D1
+    MULU    D2,D0
+    MULU    D2,D1
+    ADD.W   D0,D2
+    *MOLTIPLICO PER 2 PERCHE LAVORO CON LE WORD
+    MULU    #2,D0
+    ADDA.W  D0,A0
+    DIVU    #2,D0
+DLOOP
+    MOVE.W  (A0)+,(A5)+
+    ADD.W   #1,D0
+    CMP     D0,D2
+    BNE DLOOP
+    *PER SEMPLICITÀ RICREO IL PUNTATORE
+    LEA MAT,A0
+    *inizializzo il registro D2 e D1 per riempire VTB
+    MOVE.W  (A3),D2
+    ADD.W   D1,D2
+    *MOLTIPLICO PER 2 PERCHE LAVORO CON LE WORD
+    MULU    #2,D1
+    ADDA.W  D1,A0
+    DIVU    #2,D1
+ELOOP
+    MOVE.W  (A0)+,(A6)+
+    ADD.W   #1,D1
+    CMP     D1,D2
+    BNE ELOOP
     RTS
 
 
@@ -96,8 +157,11 @@ START
     LEA MIN,A2
     LEA NC,A3
     LEA NR,A4
+    LEA RMA,A5
     JSR FMAX
+    LEA RMI,A5
     JSR FMIN
+    JSR INITA
     *INDICE
     ************************
     *A0=>PUNTATORE MATRICE *
@@ -107,6 +171,25 @@ START
     *A4=>PUNTATORE NR      *
     *A5=>PUNTATORE JOLLY   *
     *A6=>PUNTATORE FP      *
+    ************************
+    
+    LEA RMA,A1
+    LEA RMI,A2
+    LEA VET,A5
+    LEA VTB,A6
+    JSR FILL
+
+*DOPO LA CHIAMATA DELLA SUBROUTINE HO RIEMPITO I REGISTRI
+
+    *INDICE
+    ************************
+    *A0=>PUNTATORE MATRICE *
+    *A1=>PUNTATORE RMA     *
+    *A2=>PUNTATORE RMI     *
+    *A3=>PUNTATORE NC      *
+    *A4=>PUNTATORE NR      *
+    *A5=>PUNTATORE VET     *
+    *A6=>PUNTATORE VTB     *
     ************************
 
     END START
