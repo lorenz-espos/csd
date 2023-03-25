@@ -1,19 +1,117 @@
-* dati forniti da un’immagine video vengono memorizzati in una matrice di NxM byte.
-* Definire un programma assembly tramite cui:  
-*Calcolare il valore di grigi massimo e minimo; 
-*Scambiare la riga contenente il valore massimo con la riga contenente il valore minimo.  
-*Nel caso di una matrice quadrata: 
-*Contare il numero di bit alti sulla diagonale.
+*ESERCIZIO MAX E MIN MATRICE
 
     ORG $8000
-MAT DS.W    11,20,30,68,9,190,3,2,1
-NC  DS.W    3
-NR  DS.W    3
+*AREA DI MEMORIA E DEFINIZIONE PARAMETRI
+MAT DC.W    11,20,30,68,9,190,3,2,1
+NC  DC.W 3
+NR  DC.W 3
+MAX DC.W    0
+MIN DC.W    655
+
+MAXC    MOVE.W  D2,(A1)
+    JMP RET
+
+MINC    MOVE.W  D2,(A2)
+    JMP RT
 
     ORG $8100
+FMAX
+    LINK    A6,#0
+    MOVE.L  A0,8(A6)
+    MOVE.L  A1,16(A6)
+    MOVE.L  A2,24(A6)
+    MOVE.L  A3,32(A6)
+*pulisco i registri
+    CLR D0
+    CLR D1
+    CLR D2
+    CLR D3
+    CLR D4
+    CLR D5
+    MOVE.W  (A3),D4
+*D4 rappresenta le righe
+    MOVE.W  (A4),D5
+*D5 rappresenta le colonne
+
+    
+LOOP
+    CLR D0
+ALOOP
+    MOVE.W  (A0)+,D2
+    *sposto l'elemento attuale in D2
+    MOVE.W  (A1),D3
+    *sposto il massimo in D3
+    CMP D2,D3
+	BLT MAXC
+RET ADD #1,D0
+    CMP D0,D5
+    BNE ALOOP
+    ADD #1,D1
+    CMP D1,D4
+    BNE LOOP
+    MOVE.L  32(A6),A3
+    MOVE.L  24(A6),A2
+    MOVE.L  16(A6),A1
+    MOVE.L  8(A6),A0    
+    UNLK    A6
+    RTS
+
+
+
+FMIN
+*pulisco i registri
+    CLR D0
+    CLR D1
+    CLR D2
+    CLR D3
+    CLR D4
+    CLR D5
+    MOVE.W  (A3),D4
+*D4 rappresenta le righe
+    MOVE.W  (A4),D5
+*D5 rappresenta le colonne
+
+    
+BLOOP
+    CLR D0
+CLOOP
+    MOVE.W  (A0)+,D2
+    MOVE.W  (A2),D3
+    CMP.W   D2,D3
+	BGT MINC
+RT  ADD #1,D0
+    CMP D0,D5
+    BNE CLOOP
+    ADD #1,D1
+    CMP D1,D4
+    BNE BLOOP
+    RTS
+
+
+    ORG $8400
 START
-
-
-
+*inzializzazione dei puntatori alla matrice e al numero di colonne e righe
+    LEA MAT,A0
+    LEA MAX,A1
+    LEA MIN,A2
+    LEA NC,A3
+    LEA NR,A4
+    JSR FMAX
+    JSR FMIN
 
     END START
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

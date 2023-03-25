@@ -14,13 +14,13 @@ START
     CLR D0
     LEA VET,A0  *punto alla testa di VET mediante il registro A0
 LOOP
-    MOVE.W  #1,(A0)
-    ADDA    #2,A0
+    MOVE.W  #1,(A0)+
     JSR SOM
     CMP #N,D0
     BNE LOOP
 
     END START
+
 
 
 

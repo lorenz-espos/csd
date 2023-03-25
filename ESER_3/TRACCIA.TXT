@@ -1,0 +1,6 @@
+* dati forniti da un immagine video vengono memorizzati in una matrice di NxM byte
+* Definire un programma assembly tramite cui 
+* Calcolare il valore di grigi massimo e minimo 
+* Scambiare la riga contenente il valore massimo con la riga contenente il valore minimo  
+* Nel caso di una matrice quadrata
+* Contare il numero di bit alti sulla diagonale

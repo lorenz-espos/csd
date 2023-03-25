@@ -3,6 +3,7 @@
 
     ORG $8000
 VET DC.W    14
+RES DC.W    0
 *dichiaro il vettore contenente 14
 
 *inserisco il sottoprogramma per il conteggio
@@ -10,9 +11,9 @@ COUNT
         LINK A6,#0
         MOVE.W D0,2(SP)
         CLR D0
-        MOVE.W D1,D0
+        MOVE.W (A1),D0
         ADD #1,D0
-        MOVE.W D0,D1
+        MOVE.W D0,(A1)
         MOVE.W 2(A6),D0
         UNLK A6
         JMP LOOP
@@ -20,9 +21,9 @@ COUNT
 START
 *creo il puntatore alla prima variabile del vettore
     LEA VET,A0
+    LEA RES,A1
+*creo un puntatore alla variabile
     MOVE.W (A0),D0
-*sposto il valore del primo elemento del vettore nel registro D0
-    CLR.W   D1
 *creo un loop in cui mediante lo shift register controlliamo il numero di bit pari ad 1
 *il numero bit pari ad 1 vengono salvati nel registro D1
 LOOP    LSR #1,D0
@@ -34,6 +35,9 @@ LOOP    LSR #1,D0
 
 
     END START
+
+
+
 
 
 

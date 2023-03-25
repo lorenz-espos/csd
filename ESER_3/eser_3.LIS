@@ -1,0 +1,105 @@
+00000000                                     1  *ESERCIZIO MAX E MIN MATRICE
+00000000                                     2  
+00008000                                     3      ORG $8000
+00008000                                     4  *AREA DI MEMORIA E DEFINIZIONE PARAMETRI
+00008000  000B 0014 001E 0044 0009 ...       5  MAT DC.W    11,20,30,68,9,190,3,2,1
+00008012  0003                               6  NC  DC.W 3
+00008014  0003                               7  NR  DC.W 3
+00008016  0000                               8  MAX DC.W    0
+00008018  028F                               9  MIN DC.W    655
+0000801A                                    10  
+0000801A  3282                              11  MAXC    MOVE.W  D2,(A1)
+0000801C  4EF9 00008130                     12      JMP RET
+00008022                                    13  
+00008022  3482                              14  MINC    MOVE.W  D2,(A2)
+00008024  4EF9 0000816C                     15      JMP RT
+0000802A                                    16  
+00008100                                    17      ORG $8100
+00008100                                    18  FMAX
+00008100  4E56 0000                         19      LINK    A6,#0
+00008104  2D48 0008                         20      MOVE.L  A0,8(A6)
+00008108  2D49 0010                         21      MOVE.L  A1,16(A6)
+0000810C  2D4A 0018                         22      MOVE.L  A2,24(A6)
+00008110  2D4B 0020                         23      MOVE.L  A3,32(A6)
+00008114                                    24  *pulisco i registri
+00008114  4240                              25      CLR D0
+00008116  4241                              26      CLR D1
+00008118  4242                              27      CLR D2
+0000811A  4243                              28      CLR D3
+0000811C  4244                              29      CLR D4
+0000811E  4245                              30      CLR D5
+00008120  3813                              31      MOVE.W  (A3),D4
+00008122                                    32  *D4 rappresenta le righe
+00008122  3A14                              33      MOVE.W  (A4),D5
+00008124                                    34  *D5 rappresenta le colonne
+00008124                                    35  
+00008124                                    36      
+00008124                                    37  LOOP
+00008124  4240                              38      CLR D0
+00008126                                    39  ALOOP
+00008126  3418                              40      MOVE.W  (A0)+,D2
+00008128                                    41      *sposto l'elemento attuale in D2
+00008128  3611                              42      MOVE.W  (A1),D3
+0000812A                                    43      *sposto il massimo in D3
+0000812A  B642                              44      CMP D2,D3
+0000812C  6D00 FEEC                         45  	BLT MAXC
+00008130  5240                              46  RET ADD #1,D0
+00008132  BA40                              47      CMP D0,D5
+00008134  66F0                              48      BNE ALOOP
+00008136  5241                              49      ADD #1,D1
+00008138  B841                              50      CMP D1,D4
+0000813A  66E8                              51      BNE LOOP
+0000813C  266E 0020                         52      MOVE.L  32(A6),A3
+00008140  246E 0018                         53      MOVE.L  24(A6),A2
+00008144  226E 0010                         54      MOVE.L  16(A6),A1
+00008148  206E 0008                         55      MOVE.L  8(A6),A0    
+0000814C  4E5E                              56      UNLK    A6
+0000814E  4E75                              57      RTS
+00008150                                    58  
+00008150                                    59  
+00008150                                    60  
+00008150                                    61  FMIN
+00008150                                    62  *pulisco i registri
+00008150  4240                              63      CLR D0
+00008152  4241                              64      CLR D1
+00008154  4242                              65      CLR D2
+00008156  4243                              66      CLR D3
+00008158  4244                              67      CLR D4
+0000815A  4245                              68      CLR D5
+0000815C  3813                              69      MOVE.W  (A3),D4
+0000815E                                    70  *D4 rappresenta le righe
+0000815E  3A14                              71      MOVE.W  (A4),D5
+00008160                                    72  *D5 rappresenta le colonne
+00008160                                    73  
+00008160                                    74      
+00008160                                    75  BLOOP
+00008160  4240                              76      CLR D0
+00008162                                    77  CLOOP
+00008162  3418                              78      MOVE.W  (A0)+,D2
+00008164  3612                              79      MOVE.W  (A2),D3
+00008166  B642                              80      CMP.W   D2,D3
+00008168  6E00 FEB8                         81  	BGT MINC
+0000816C  5240                              82  RT  ADD #1,D0
+0000816E  BA40                              83      CMP D0,D5
+00008170  66F0                              84      BNE CLOOP
+00008172  5241                              85      ADD #1,D1
+00008174  B841                              86      CMP D1,D4
+00008176  66E8                              87      BNE BLOOP
+00008178  4E75                              88      RTS
+0000817A                                    89  
+0000817A                                    90  
+00008400                                    91      ORG $8400
+00008400                                    92  START
+00008400                                    93  *inzializzazione dei puntatori alla matrice e al numero di colonne e righe
+00008400  41F9 00008000                     94      LEA MAT,A0
+00008406  43F9 00008016                     95      LEA MAX,A1
+0000840C  45F9 00008018                     96      LEA MIN,A2
+00008412  47F9 00008012                     97      LEA NC,A3
+00008418  49F9 00008014                     98      LEA NR,A4
+0000841E  4EB9 00008100                     99      JSR FMAX
+00008424  4EB9 00008150                    100      JSR FMIN
+0000842A                                   101  
+0000842A                                   102      END START
+
+No errors detected
+No warnings generated
