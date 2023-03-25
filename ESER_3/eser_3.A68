@@ -7,7 +7,7 @@ NC  DC.W 3
 NR  DC.W 3
 MAX DC.W    0
 MIN DC.W    655
-
+*FUNZIONI PER L'AGGIORNAMENTO DEL MAX E DEL MIN
 MAXC    MOVE.W  D2,(A1)
     JMP RET
 
@@ -15,6 +15,7 @@ MINC    MOVE.W  D2,(A2)
     JMP RT
 
     ORG $8100
+*AREA DELLE SUBROUTINE
 FMAX
     LINK    A6,#0
     MOVE.L  A0,8(A6)
@@ -32,8 +33,7 @@ FMAX
 *D4 rappresenta le righe
     MOVE.W  (A4),D5
 *D5 rappresenta le colonne
-
-    
+  
 LOOP
     CLR D0
 ALOOP
@@ -98,6 +98,16 @@ START
     LEA NR,A4
     JSR FMAX
     JSR FMIN
+    *INDICE
+    ************************
+    *A0=>PUNTATORE MATRICE *
+    *A1=>PUNTATORE MAX     *
+    *A2=>PUNTATORE MIN     *
+    *A3=>PUNTATORE NC      *
+    *A4=>PUNTATORE NR      *
+    *A5=>PUNTATORE JOLLY   *
+    *A6=>PUNTATORE FP      *
+    ************************
 
     END START
 
