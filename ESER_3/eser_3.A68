@@ -2,15 +2,18 @@
 
     ORG $8000
 *AREA DI MEMORIA E DEFINIZIONE PARAMETRI
+CC  EQU 3
+CR  EQU 3
+*costanti per il numero di righe e di colonne
 MAT DC.W    11,20,30,68,9,190,3,2,1
-NC  DC.W    3
-NR  DC.W    3
+NC  DC.W    CC
+NR  DC.W    CR
 MAX DC.W    0
 MIN DC.W    655
 RMA DS.W    1
 RMI DS.W    1
-VET DS.W    1
-VTB DS.W    1
+VET DS.W    CR
+VTB DS.W    CR
 *FUNZIONI PER L'AGGIORNAMENTO DEL MAX E DEL MIN
 
 MAXC    MOVE.W  D2,(A1)
@@ -148,6 +151,49 @@ ELOOP
     BNE ELOOP
     RTS
 
+SWP
+    *USO A3 COME FRAME POINTER COSÌ POSSO SPORCARE A0
+    LINK    A4,#0
+    MOVE.L  A0,8(A4)
+    CLR D0
+    CLR D1
+    CLR D2
+    CLR D3
+    CLR D4
+    MOVE.W  (A1),D0
+    *D0 CONTIENE L'RMA
+    MOVE.W  (A2),D1
+    *D1 CONTIENE L'RMI
+    MOVE.W  (A3),D2   
+    *D2 CONTIENE IL NUMERO DI COLONNE
+    MULU    D2,D0
+    MULU    D2,D1
+    ADD.W   D0,D2
+    *MOLTIPLICO PER 2 PERCHE LAVORO CON LE WORD
+    MULU    #2,D0
+    ADDA.W  D0,A0
+    DIVU    #2,D0
+FLOOP
+    MOVE.W  (A6)+,(A0)+
+    ADD.W   #1,D0
+    CMP     D0,D2
+    BNE FLOOP
+    *ripristino A0 che è stato sporcato prima per scrivere sulla matrice VET
+    MOVE.L  8(A4),A0    
+    UNLK    A4
+    *inizializzo il registro D2 e D1 per riempire la matrice con  VTB
+    MOVE.W  (A3),D2
+    ADD.W   D1,D2
+    *MOLTIPLICO PER 2 PERCHE LAVORO CON LE WORD
+    MULU    #2,D1
+    ADDA.W  D1,A0
+    DIVU    #2,D1
+GLOOP
+    MOVE.W  (A5)+,(A0)+
+    ADD.W   #1,D1
+    CMP     D1,D2
+    BNE GLOOP
+    RTS
 
     ORG $8400
 START
@@ -172,7 +218,6 @@ START
     *A5=>PUNTATORE JOLLY   *
     *A6=>PUNTATORE FP      *
     ************************
-    
     LEA RMA,A1
     LEA RMI,A2
     LEA VET,A5
@@ -191,5 +236,21 @@ START
     *A5=>PUNTATORE VET     *
     *A6=>PUNTATORE VTB     *
     ************************
-
+    
+    LEA MAT,A0     
+    LEA RMA,A1
+    LEA RMI,A2
+    LEA NC,A3
+    LEA VET,A5
+    LEA VTB,A6
+    JSR SWP
+    ************************
+    *A0=>PUNTATORE MATRICE *
+    *A1=>PUNTATORE RMA     *
+    *A2=>PUNTATORE RMI     *
+    *A3=>PUNTATORE NC      *
+    *A4=>PUNTATORE FP      *
+    *A5=>PUNTATORE VET     *
+    *A6=>PUNTATORE VTB     *
+    ************************
     END START

@@ -2,195 +2,258 @@
 00000000                                     2  
 00008000                                     3      ORG $8000
 00008000                                     4  *AREA DI MEMORIA E DEFINIZIONE PARAMETRI
-00008000  000B 0014 001E 0044 0009 ...       5  MAT DC.W    11,20,30,68,9,190,3,2,1
-00008012  0003                               6  NC  DC.W    3
-00008014  0003                               7  NR  DC.W    3
-00008016  0000                               8  MAX DC.W    0
-00008018  028F                               9  MIN DC.W    655
-0000801A                                    10  RMA DS.W    1
-0000801C                                    11  RMI DS.W    1
-0000801E                                    12  VET DS.W    1
-00008020                                    13  VTB DS.W    1
-00008022                                    14  *FUNZIONI PER L'AGGIORNAMENTO DEL MAX E DEL MIN
-00008022                                    15  
-00008022  3282                              16  MAXC    MOVE.W  D2,(A1)
-00008024  3A81                              17      MOVE.W D1,(A5)
-00008026  4EF9 00008130                     18      JMP RET
-0000802C                                    19  
-0000802C  3482                              20  MINC    MOVE.W  D2,(A2)
-0000802E  3A81                              21      MOVE.W  D1,(A5)
-00008030  4EF9 00008174                     22      JMP RT
-00008036                                    23  
-00008036                                    24  INITA
-00008036                                    25      *LIBERO I REGISTRI A1 E A2
-00008036  93C9                              26      SUBA.L  A1,A1
-00008038  95CA                              27      SUBA.L  A2,A2
-0000803A  9BCD                              28      SUBA.L  A5,A5
-0000803C  4E75                              29      RTS
-0000803E                                    30  
-00008100                                    31      ORG $8100
-00008100                                    32  *AREA DELLE SUBROUTINE
-00008100                                    33  FMAX
-00008100  4E56 0000                         34      LINK    A6,#0
-00008104  2D48 0008                         35      MOVE.L  A0,8(A6)
-00008108  2D49 0010                         36      MOVE.L  A1,16(A6)
-0000810C  2D4A 0018                         37      MOVE.L  A2,24(A6)
-00008110  2D4B 0020                         38      MOVE.L  A3,32(A6)
-00008114                                    39  *pulisco i registri
-00008114  4240                              40      CLR D0
-00008116  4241                              41      CLR D1
-00008118  4242                              42      CLR D2
-0000811A  4243                              43      CLR D3
-0000811C  4244                              44      CLR D4
-0000811E  4245                              45      CLR D5
-00008120  3813                              46      MOVE.W  (A3),D4
-00008122                                    47  *D4 rappresenta le righe
-00008122  3A14                              48      MOVE.W  (A4),D5
-00008124                                    49  *D5 rappresenta le colonne
-00008124                                    50    
-00008124                                    51  LOOP
-00008124  4240                              52      CLR D0
-00008126                                    53  ALOOP
-00008126  3418                              54      MOVE.W  (A0)+,D2
-00008128                                    55      *sposto l'elemento attuale in D2
-00008128  3611                              56      MOVE.W  (A1),D3
-0000812A                                    57      *sposto il massimo in D3
-0000812A  B642                              58      CMP D2,D3
-0000812C  6D00 FEF4                         59  	BLT MAXC
-00008130  5240                              60  RET ADD #1,D0
-00008132  BA40                              61      CMP D0,D5
-00008134  66F0                              62      BNE ALOOP
-00008136  5241                              63      ADD #1,D1
-00008138                                    64      *D1 è la riga temporanea
-00008138  B841                              65      CMP D1,D4
-0000813A  66E8                              66      BNE LOOP
-0000813C  266E 0020                         67      MOVE.L  32(A6),A3
-00008140  246E 0018                         68      MOVE.L  24(A6),A2
-00008144  226E 0010                         69      MOVE.L  16(A6),A1
-00008148  206E 0008                         70      MOVE.L  8(A6),A0    
-0000814C  4E5E                              71      UNLK    A6
-0000814E  4E75                              72      RTS
-00008150                                    73  
-00008150                                    74  
+00008000  =00000003                          5  CC  EQU 3
+00008000  =00000003                          6  CR  EQU 3
+00008000  000B 0014 001E 0044 0009 ...       7  MAT DC.W    11,20,30,68,9,190,3,2,1
+00008012  0003                               8  NC  DC.W    CC
+00008014  0003                               9  NR  DC.W    CR
+00008016  0000                              10  MAX DC.W    0
+00008018  028F                              11  MIN DC.W    655
+0000801A                                    12  RMA DS.W    1
+0000801C                                    13  RMI DS.W    1
+0000801E                                    14  VET DS.W    CR
+00008024                                    15  VTB DS.W    CR
+0000802A                                    16  *FUNZIONI PER L'AGGIORNAMENTO DEL MAX E DEL MIN
+0000802A                                    17  
+0000802A  3282                              18  MAXC    MOVE.W  D2,(A1)
+0000802C  3A81                              19      MOVE.W D1,(A5)
+0000802E  4EF9 00008130                     20      JMP RET
+00008034                                    21  
+00008034  3482                              22  MINC    MOVE.W  D2,(A2)
+00008036  3A81                              23      MOVE.W  D1,(A5)
+00008038  4EF9 00008174                     24      JMP RT
+0000803E                                    25  
+0000803E                                    26  INITA
+0000803E                                    27      *LIBERO I REGISTRI A1 E A2
+0000803E  93C9                              28      SUBA.L  A1,A1
+00008040  95CA                              29      SUBA.L  A2,A2
+00008042  9BCD                              30      SUBA.L  A5,A5
+00008044  4E75                              31      RTS
+00008046                                    32  
+00008100                                    33      ORG $8100
+00008100                                    34  *AREA DELLE SUBROUTINE
+00008100                                    35  FMAX
+00008100  4E56 0000                         36      LINK    A6,#0
+00008104  2D48 0008                         37      MOVE.L  A0,8(A6)
+00008108  2D49 0010                         38      MOVE.L  A1,16(A6)
+0000810C  2D4A 0018                         39      MOVE.L  A2,24(A6)
+00008110  2D4B 0020                         40      MOVE.L  A3,32(A6)
+00008114                                    41  *pulisco i registri
+00008114  4240                              42      CLR D0
+00008116  4241                              43      CLR D1
+00008118  4242                              44      CLR D2
+0000811A  4243                              45      CLR D3
+0000811C  4244                              46      CLR D4
+0000811E  4245                              47      CLR D5
+00008120  3813                              48      MOVE.W  (A3),D4
+00008122                                    49  *D4 rappresenta le righe
+00008122  3A14                              50      MOVE.W  (A4),D5
+00008124                                    51  *D5 rappresenta le colonne
+00008124                                    52    
+00008124                                    53  LOOP
+00008124  4240                              54      CLR D0
+00008126                                    55  ALOOP
+00008126  3418                              56      MOVE.W  (A0)+,D2
+00008128                                    57      *sposto l'elemento attuale in D2
+00008128  3611                              58      MOVE.W  (A1),D3
+0000812A                                    59      *sposto il massimo in D3
+0000812A  B642                              60      CMP D2,D3
+0000812C  6D00 FEFC                         61  	BLT MAXC
+00008130  5240                              62  RET ADD #1,D0
+00008132  BA40                              63      CMP D0,D5
+00008134  66F0                              64      BNE ALOOP
+00008136  5241                              65      ADD #1,D1
+00008138                                    66      *D1 è la riga temporanea
+00008138  B841                              67      CMP D1,D4
+0000813A  66E8                              68      BNE LOOP
+0000813C  266E 0020                         69      MOVE.L  32(A6),A3
+00008140  246E 0018                         70      MOVE.L  24(A6),A2
+00008144  226E 0010                         71      MOVE.L  16(A6),A1
+00008148  206E 0008                         72      MOVE.L  8(A6),A0    
+0000814C  4E5E                              73      UNLK    A6
+0000814E  4E75                              74      RTS
 00008150                                    75  
-00008150                                    76  FMIN
-00008150                                    77      *in questo caso mi salvo solo A0 sullo stack 
-00008150                                    78      *gli altri registri dopo non mi serviranno più
-00008150  4E56 0000                         79      LINK    A6,#0
-00008154  2D48 0008                         80      MOVE.L  A0,8(A6)
-00008158                                    81  *pulisco i registri
-00008158  4240                              82      CLR D0
-0000815A  4241                              83      CLR D1
-0000815C  4242                              84      CLR D2
-0000815E  4243                              85      CLR D3
-00008160  4244                              86      CLR D4
-00008162  4245                              87      CLR D5
-00008164  3813                              88      MOVE.W  (A3),D4
-00008166                                    89  *D4 rappresenta le righe
-00008166  3A14                              90      MOVE.W  (A4),D5
-00008168                                    91  *D5 rappresenta le colonne
-00008168                                    92  
-00008168                                    93      
-00008168                                    94  BLOOP
-00008168  4240                              95      CLR D0
-0000816A                                    96  CLOOP
-0000816A  3418                              97      MOVE.W  (A0)+,D2
-0000816C  3612                              98      MOVE.W  (A2),D3
-0000816E  B642                              99      CMP.W   D2,D3
-00008170  6E00 FEBA                        100  	BGT MINC
-00008174  5240                             101  RT  ADD #1,D0
-00008176  BA40                             102      CMP D0,D5
-00008178  66F0                             103      BNE CLOOP
-0000817A  5241                             104      ADD #1,D1
-0000817C                                   105      *D1 è la riga temporanea
-0000817C  B841                             106      CMP D1,D4
-0000817E  66E8                             107      BNE BLOOP
-00008180  206E 0008                        108      MOVE.L  8(A6),A0    
-00008184  4E5E                             109      UNLK    A6
-00008186  4E75                             110      RTS
-00008188                                   111  
-00008188                                   112  FILL
-00008188  4240                             113      CLR D0
-0000818A  4241                             114      CLR D1
-0000818C  4242                             115      CLR D2
-0000818E  4243                             116      CLR D3
-00008190  4244                             117      CLR D4
-00008192  4245                             118      CLR D5
-00008194  3011                             119      MOVE.W  (A1),D0
-00008196  3212                             120      MOVE.W  (A2),D1
-00008198  3413                             121      MOVE.W  (A3),D2
-0000819A  C0C2                             122      MULU    D2,D0
-0000819C  C2C2                             123      MULU    D2,D1
-0000819E  D440                             124      ADD.W   D0,D2
-000081A0                                   125      *MOLTIPLICO PER 2 PERCHE LAVORO CON LE WORD
-000081A0  C0FC 0002                        126      MULU    #2,D0
-000081A4  D0C0                             127      ADDA.W  D0,A0
-000081A6  80FC 0002                        128      DIVU    #2,D0
-000081AA                                   129  DLOOP
-000081AA  3AD8                             130      MOVE.W  (A0)+,(A5)+
-000081AC  5240                             131      ADD.W   #1,D0
-000081AE  B440                             132      CMP     D0,D2
-000081B0  66F8                             133      BNE DLOOP
-000081B2                                   134      *PER SEMPLICITÀ RICREO IL PUNTATORE
-000081B2  41F9 00008000                    135      LEA MAT,A0
-000081B8  3413                             136      MOVE.W  (A3),D2
-000081BA  D441                             137      ADD.W   D1,D2
-000081BC  C2FC 0002                        138      MULU    #2,D1
-000081C0  D0C1                             139      ADDA.W  D1,A0
-000081C2  82FC 0002                        140      DIVU    #2,D1
-000081C6                                   141  ELOOP
-000081C6  3CD8                             142      MOVE.W  (A0)+,(A6)+
-000081C8  5241                             143      ADD.W   #1,D1
-000081CA  B441                             144      CMP     D1,D2
-000081CC  66F8                             145      BNE ELOOP
-000081CE  4E75                             146      RTS
-000081D0                                   147  
-000081D0                                   148  
-00008400                                   149      ORG $8400
-00008400                                   150  START
-00008400                                   151  *inzializzazione dei puntatori alla matrice e al numero di colonne e righe
-00008400  41F9 00008000                    152      LEA MAT,A0
-00008406  43F9 00008016                    153      LEA MAX,A1
-0000840C  45F9 00008018                    154      LEA MIN,A2
-00008412  47F9 00008012                    155      LEA NC,A3
-00008418  49F9 00008014                    156      LEA NR,A4
-0000841E  4BF9 0000801A                    157      LEA RMA,A5
-00008424  4EB9 00008100                    158      JSR FMAX
-0000842A  4BF9 0000801C                    159      LEA RMI,A5
-00008430  4EB9 00008150                    160      JSR FMIN
-00008436  4EB9 00008036                    161      JSR INITA
-0000843C                                   162      *INDICE
-0000843C                                   163      ************************
-0000843C                                   164      *A0=>PUNTATORE MATRICE *
-0000843C                                   165      *A1=>PUNTATORE MAX     *
-0000843C                                   166      *A2=>PUNTATORE MIN     *
-0000843C                                   167      *A3=>PUNTATORE NC      *
-0000843C                                   168      *A4=>PUNTATORE NR      *
-0000843C                                   169      *A5=>PUNTATORE JOLLY   *
-0000843C                                   170      *A6=>PUNTATORE FP      *
-0000843C                                   171      ************************
-0000843C                                   172      
-0000843C  43F9 0000801A                    173      LEA RMA,A1
-00008442  45F9 0000801C                    174      LEA RMI,A2
-00008448  4BF9 0000801E                    175      LEA VET,A5
-0000844E  4DF9 00008020                    176      LEA VTB,A6
-00008454  4EB9 00008188                    177      JSR FILL
-0000845A                                   178  
-0000845A                                   179  *DOPO LA CHIAMATA DELLA SUBROUTINE HO RIEMPITO I REGISTRI
-0000845A                                   180  
-0000845A                                   181  
-0000845A                                   182      *INDICE
-0000845A                                   183      ************************
-0000845A                                   184      *A0=>PUNTATORE MATRICE *
-0000845A                                   185      *A1=>PUNTATORE RMA     *
-0000845A                                   186      *A2=>PUNTATORE RMI     *
-0000845A                                   187      *A3=>PUNTATORE NC      *
-0000845A                                   188      *A4=>PUNTATORE NR      *
-0000845A                                   189      *A5=>PUNTATORE VET     *
-0000845A                                   190      *A6=>PUNTATORE VTB     *
-0000845A                                   191      ************************
-0000845A                                   192  
-0000845A                                   193      END START
+00008150                                    76  
+00008150                                    77  
+00008150                                    78  FMIN
+00008150                                    79      *in questo caso mi salvo solo A0 sullo stack 
+00008150                                    80      *gli altri registri dopo non mi serviranno più
+00008150  4E56 0000                         81      LINK    A6,#0
+00008154  2D48 0008                         82      MOVE.L  A0,8(A6)
+00008158                                    83  *pulisco i registri
+00008158  4240                              84      CLR D0
+0000815A  4241                              85      CLR D1
+0000815C  4242                              86      CLR D2
+0000815E  4243                              87      CLR D3
+00008160  4244                              88      CLR D4
+00008162  4245                              89      CLR D5
+00008164  3813                              90      MOVE.W  (A3),D4
+00008166                                    91  *D4 rappresenta le righe
+00008166  3A14                              92      MOVE.W  (A4),D5
+00008168                                    93  *D5 rappresenta le colonne
+00008168                                    94  
+00008168                                    95      
+00008168                                    96  BLOOP
+00008168  4240                              97      CLR D0
+0000816A                                    98  CLOOP
+0000816A  3418                              99      MOVE.W  (A0)+,D2
+0000816C  3612                             100      MOVE.W  (A2),D3
+0000816E  B642                             101      CMP.W   D2,D3
+00008170  6E00 FEC2                        102  	BGT MINC
+00008174  5240                             103  RT  ADD #1,D0
+00008176  BA40                             104      CMP D0,D5
+00008178  66F0                             105      BNE CLOOP
+0000817A  5241                             106      ADD #1,D1
+0000817C                                   107      *D1 è la riga temporanea
+0000817C  B841                             108      CMP D1,D4
+0000817E  66E8                             109      BNE BLOOP
+00008180  206E 0008                        110      MOVE.L  8(A6),A0    
+00008184  4E5E                             111      UNLK    A6
+00008186  4E75                             112      RTS
+00008188                                   113  
+00008188                                   114  FILL
+00008188  4240                             115      CLR D0
+0000818A  4241                             116      CLR D1
+0000818C  4242                             117      CLR D2
+0000818E  4243                             118      CLR D3
+00008190  4244                             119      CLR D4
+00008192  4245                             120      CLR D5
+00008194  3011                             121      MOVE.W  (A1),D0
+00008196  3212                             122      MOVE.W  (A2),D1
+00008198  3413                             123      MOVE.W  (A3),D2
+0000819A                                   124      *inizializzo il registro  D0 e D1
+0000819A  C0C2                             125      MULU    D2,D0
+0000819C  C2C2                             126      MULU    D2,D1
+0000819E  D440                             127      ADD.W   D0,D2
+000081A0                                   128      *MOLTIPLICO PER 2 PERCHE LAVORO CON LE WORD
+000081A0  C0FC 0002                        129      MULU    #2,D0
+000081A4  D0C0                             130      ADDA.W  D0,A0
+000081A6  80FC 0002                        131      DIVU    #2,D0
+000081AA                                   132  DLOOP
+000081AA  3AD8                             133      MOVE.W  (A0)+,(A5)+
+000081AC  5240                             134      ADD.W   #1,D0
+000081AE  B440                             135      CMP     D0,D2
+000081B0  66F8                             136      BNE DLOOP
+000081B2                                   137      *PER SEMPLICITÀ RICREO IL PUNTATORE
+000081B2  41F9 00008000                    138      LEA MAT,A0
+000081B8                                   139      *inizializzo il registro D2 e D1 per riempire VTB
+000081B8  3413                             140      MOVE.W  (A3),D2
+000081BA  D441                             141      ADD.W   D1,D2
+000081BC                                   142      *MOLTIPLICO PER 2 PERCHE LAVORO CON LE WORD
+000081BC  C2FC 0002                        143      MULU    #2,D1
+000081C0  D0C1                             144      ADDA.W  D1,A0
+000081C2  82FC 0002                        145      DIVU    #2,D1
+000081C6                                   146  ELOOP
+000081C6  3CD8                             147      MOVE.W  (A0)+,(A6)+
+000081C8  5241                             148      ADD.W   #1,D1
+000081CA  B441                             149      CMP     D1,D2
+000081CC  66F8                             150      BNE ELOOP
+000081CE  4E75                             151      RTS
+000081D0                                   152  
+000081D0                                   153  SWP
+000081D0                                   154      *USO A3 COME FRAME POINTER COSÌ POSSO SPORCARE
+000081D0  4E54 0000                        155      LINK    A4,#0
+000081D4  2948 0008                        156      MOVE.L  A0,8(A4)
+000081D8  4240                             157      CLR D0
+000081DA  4241                             158      CLR D1
+000081DC  4242                             159      CLR D2
+000081DE  4243                             160      CLR D3
+000081E0  4244                             161      CLR D4
+000081E2  3011                             162      MOVE.W  (A1),D0
+000081E4                                   163      *D0 CONTIENE L'RMA
+000081E4  3212                             164      MOVE.W  (A2),D1
+000081E6                                   165      *D1 CONTIENE L'RMI
+000081E6  3413                             166      MOVE.W  (A3),D2   
+000081E8                                   167      *D2 CONTIENE IL NUMERO DI COLONNE
+000081E8  C0C2                             168      MULU    D2,D0
+000081EA  C2C2                             169      MULU    D2,D1
+000081EC  D440                             170      ADD.W   D0,D2
+000081EE                                   171      *MOLTIPLICO PER 2 PERCHE LAVORO CON LE WORD
+000081EE  C0FC 0002                        172      MULU    #2,D0
+000081F2  D0C0                             173      ADDA.W  D0,A0
+000081F4  80FC 0002                        174      DIVU    #2,D0
+000081F8                                   175  FLOOP
+000081F8  30DE                             176      MOVE.W  (A6)+,(A0)+
+000081FA  5240                             177      ADD.W   #1,D0
+000081FC  B440                             178      CMP     D0,D2
+000081FE  66F8                             179      BNE FLOOP
+00008200  206C 0008                        180      MOVE.L  8(A4),A0    
+00008204  4E5C                             181      UNLK    A4
+00008206                                   182      *inizializzo il registro D2 e D1 per riempire VTB
+00008206  3413                             183      MOVE.W  (A3),D2
+00008208  D441                             184      ADD.W   D1,D2
+0000820A                                   185      *MOLTIPLICO PER 2 PERCHE LAVORO CON LE WORD
+0000820A  C2FC 0002                        186      MULU    #2,D1
+0000820E  D0C1                             187      ADDA.W  D1,A0
+00008210  82FC 0002                        188      DIVU    #2,D1
+00008214                                   189  GLOOP
+00008214  30DD                             190      MOVE.W  (A5)+,(A0)+
+00008216  5241                             191      ADD.W   #1,D1
+00008218  B441                             192      CMP     D1,D2
+0000821A  66F8                             193      BNE GLOOP
+0000821C  4E75                             194      RTS
+0000821E                                   195  
+0000821E                                   196  
+0000821E                                   197  
+00008400                                   198      ORG $8400
+00008400                                   199  START
+00008400                                   200  *inzializzazione dei puntatori alla matrice e al numero di colonne e righe
+00008400  41F9 00008000                    201      LEA MAT,A0
+00008406  43F9 00008016                    202      LEA MAX,A1
+0000840C  45F9 00008018                    203      LEA MIN,A2
+00008412  47F9 00008012                    204      LEA NC,A3
+00008418  49F9 00008014                    205      LEA NR,A4
+0000841E  4BF9 0000801A                    206      LEA RMA,A5
+00008424  4EB9 00008100                    207      JSR FMAX
+0000842A  4BF9 0000801C                    208      LEA RMI,A5
+00008430  4EB9 00008150                    209      JSR FMIN
+00008436  4EB9 0000803E                    210      JSR INITA
+0000843C                                   211      *INDICE
+0000843C                                   212      ************************
+0000843C                                   213      *A0=>PUNTATORE MATRICE *
+0000843C                                   214      *A1=>PUNTATORE MAX     *
+0000843C                                   215      *A2=>PUNTATORE MIN     *
+0000843C                                   216      *A3=>PUNTATORE NC      *
+0000843C                                   217      *A4=>PUNTATORE NR      *
+0000843C                                   218      *A5=>PUNTATORE JOLLY   *
+0000843C                                   219      *A6=>PUNTATORE FP      *
+0000843C                                   220      ************************
+0000843C  43F9 0000801A                    221      LEA RMA,A1
+00008442  45F9 0000801C                    222      LEA RMI,A2
+00008448  4BF9 0000801E                    223      LEA VET,A5
+0000844E  4DF9 00008024                    224      LEA VTB,A6
+00008454  4EB9 00008188                    225      JSR FILL
+0000845A                                   226  
+0000845A                                   227  *DOPO LA CHIAMATA DELLA SUBROUTINE HO RIEMPITO I REGISTRI
+0000845A                                   228  
+0000845A                                   229      *INDICE
+0000845A                                   230      ************************
+0000845A                                   231      *A0=>PUNTATORE MATRICE *
+0000845A                                   232      *A1=>PUNTATORE RMA     *
+0000845A                                   233      *A2=>PUNTATORE RMI     *
+0000845A                                   234      *A3=>PUNTATORE NC      *
+0000845A                                   235      *A4=>PUNTATORE NR      *
+0000845A                                   236      *A5=>PUNTATORE VET     *
+0000845A                                   237      *A6=>PUNTATORE VTB     *
+0000845A                                   238      ************************
+0000845A                                   239      
+0000845A  41F9 00008000                    240      LEA MAT,A0     
+00008460  43F9 0000801A                    241      LEA RMA,A1
+00008466  45F9 0000801C                    242      LEA RMI,A2
+0000846C  47F9 00008012                    243      LEA NC,A3
+00008472  4BF9 0000801E                    244      LEA VET,A5
+00008478  4DF9 00008024                    245      LEA VTB,A6
+0000847E  4EB9 000081D0                    246      JSR SWP
+00008484                                   247      ************************
+00008484                                   248      *A0=>PUNTATORE MATRICE *
+00008484                                   249      *A1=>PUNTATORE RMA     *
+00008484                                   250      *A2=>PUNTATORE RMI     *
+00008484                                   251      *A3=>PUNTATORE NC      *
+00008484                                   252      *A4=>PUNTATORE FP      *
+00008484                                   253      *A5=>PUNTATORE VET     *
+00008484                                   254      *A6=>PUNTATORE VTB     *
+00008484                                   255      ************************
+00008484                                   256      END START
 
 No errors detected
 No warnings generated
