@@ -36,9 +36,9 @@ INITA
 FMAX
     LINK    A6,#0
     MOVE.L  A0,8(A6)
-    MOVE.L  A1,16(A6)
-    MOVE.L  A2,24(A6)
-    MOVE.L  A3,32(A6)
+    MOVE.L  A1,12(A6)
+    MOVE.L  A2,16(A6)
+    MOVE.L  A3,20(A6)
 *pulisco i registri
     CLR D0
     CLR D1
@@ -67,9 +67,9 @@ RET ADD #1,D0
     *D1 è la riga temporanea
     CMP D1,D4
     BNE LOOP
-    MOVE.L  32(A6),A3
-    MOVE.L  24(A6),A2
-    MOVE.L  16(A6),A1
+    MOVE.L  20(A6),A3
+    MOVE.L  16(A6),A2
+    MOVE.L  12(A6),A1
     MOVE.L  8(A6),A0    
     UNLK    A6
     RTS
