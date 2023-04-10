@@ -1,0 +1,17 @@
+    ORG $8000
+*AREA DI MEMORIA DATI NODO A
+NUM DC.B    1,3,45,16
+DIM DC.B    4
+CNT DC.B    0
+
+
+************************************
+*AREA DEL MAIN
+
+    ORG $8100
+*GLI INDIRIZZI DELLA PERIFERICA SONO FISSI E CORRELATI AL FILE DI CONFIGURAZIONE
+
+PIADB	EQU    $2006	;indirizzo di PIA-B dato, usato in output 
+PIACB	EQU    $2007	;indirizzo di PIA-B controllo
+
+
