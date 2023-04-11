@@ -3,3 +3,119 @@
 NUM DS.B    4
 DIM DC.B    4
 CNT DC.B    0
+************************************
+*AREA DEL MAIN
+
+    ORG $8100
+*GLI INDIRIZZI DELLA PERIFERICA SONO FISSI E CORRELATI AL FILE DI CONFIGURAZIONE
+
+*poichè si utilizza prima la modalità ricevitore alloco anche la modalità input (porto A)
+PIADA	EQU    $2004	;indirizzo di PIA-A dato, usato in output 
+PIACA	EQU    $2005	;indirizzo di PIA-A controllo
+
+*poichè si utilizza dopo la modalità trasmettitore alloco la modalità output (porto B)
+PIADB	EQU    $2006	;indirizzo di PIA-B dato, usato in output 
+PIACB	EQU    $2007	;indirizzo di PIA-B controllo
+
+MAIN    JSR IN
+
+    MOVE.W  SR,D0   *STATUS REGISTER È UNA WORD
+	ANDI.W	#$D8FF,D0 ;maschera per reg stato (stato utente, int abilitati)
+	MOVE.W	D0,SR	;pone liv int a 000
+FA1 MOVE.B  CNT,D3
+    MOVE.B  DIM,D4
+    CMP D3,D4
+    BNE FA1
+
+
+FA2 JSR OUT
+*DOPO AVER CONFIGURATO IL PORTO PER L'OUTPUT configuro i registri che vado ad impiegare
+
+****************
+*A0=>NUM       *
+*A1=>PIACB     *
+*A2=>PIADB     *
+*D0=>DIM       *
+****************
+    MOVE.L  #NUM,A0
+    MOVE.L  #PIACB,A1
+    MOVE.L  #PIADB,A2
+	MOVE.B	DIM,D0	
+
+
+INVIO	MOVE.B	(A2),D1            ;lettura fittizia da PRB => serve per azzerare CRB7 dopo il primo carattere, altrimenti resta settato con l'ack
+	MOVE.B	(A0)+,(A2)	;carattere corrente da trasferire su bus di PIA porto B: dopo la scrittura di PRB, CB2 si abbassa
+*								;ci� fa abbassare CA1 sulla porta gemella dell'altro sistema generando 
+*								;un'interruzione che coincide con il segnale DATA READY
+	ADD.B		#1,D2		    ;incremento contatore elementi trasmessi
+
+ciclo	MOVE.B	(A1),D1		;In attesa di DATA ACKNOWLEDGE
+	ANDI.B	#$80,D1				;aspetta che CRB7 divenga 1
+	BEQ	ciclo
+
+	CMP	D2,D0	;controllo se ho finito di trasmettere
+	BNE	INVIO
+LOOP  	JMP LOOP	;ciclo caldo dove il processore attende interrupt		
+
+
+*********************************************************************************************************
+*INIZIALIZZAZIONE DELLA PIA: PORTO A	        	
+*   CRA |0 |0 |1 0 0 |1 |0 1|
+*	           |	  |   |____Controllo CA1: interruzioni abilitate su IRQA, CA1 sensibile a fronte 1->0
+*			   |	  |	
+*		       |	  |________Accesso a DRA: il prossimo accesso ad indirizzo pari � per PRA
+*		       |_______________Controllo CA2: 1=>linea di uscita, con gli altri due bit a 00 diventa alto sul fronte
+*												attivo di CA1 e si riabbassa a seguito di una lettura su PRA
+*											  0=>linea di ingresso, si comporta come CA1 (CRA3 come CRA0,
+*											    CRA4 come CRA1, IRQA2 come IRQA1)
+*
+*	DRA=0 => PORTO A PORTO DI INGRESSO
+*
+***********************************************************************************************************
+
+
+
+IN  
+    MOVE.B  #0,PIACA ; SELEZIONIAMO IL REGISTRO DI DIREZIONE
+    MOVE.B  #$00,PIADA
+    MOVE.B  #%00100101,PIACA ;CONFIGURO IL NODO B PER LAVORARE SOTTO INTERRUZIONE
+    RTS
+
+
+OUT 
+    MOVE.B  #0,PIACB ; SELEZIONIAMO IL REGISTRO DI DIREZIONE
+    MOVE.B  #$FF,PIADB
+    MOVE.B  #%00100100,PIACB ;CONFIGURO IL NODO B PER LAVORARE SOTTO polling
+    RTS
+
+*AREA MEMORIA DELLE INTERRUPT
+    ORG $8600
+
+INT
+    MOVE.L  A1,-(A7)
+    MOVE.L  A0,-(A7)
+    MOVE.L  D0,-(A7)
+
+	MOVEA.L	#PIADA,A1
+	MOVEA.L	#NUM,A0	;indirizzo area di salvataggio
+	MOVE.B	CNT,D0	;contatore corrente degli elementi ricevuti
+
+	
+	MOVE.B 	(A1),(A0,D0)	;acquisisce il carattere e lo trasferisce in memoria
+*						;la lettura da PRA fa abbassare CRA7 e CA2 => nell'altro sistema si abbassa CB1
+*						;ci� corrisponde all'attivazione di CRB7 che funge da DATA ACKNOWLEDGE
+	
+	ADD.B	#1,D0
+	MOVE.B	D0,CNT
+
+
+    MOVE.L  (A7)+,D0
+    MOVE.L  (A7)+,A0
+    MOVE.L  (A7)+,A1
+
+    RTE
+
+    END MAIN
+
+
+

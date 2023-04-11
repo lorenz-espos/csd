@@ -1,0 +1,114 @@
+00008000                                     1      ORG $8000
+00008000                                     2  *AREA DI MEMORIA DATI NODO A
+00008000  01 03 2D 10                        3  NUM DC.B    1,3,45,16
+00008004  04                                 4  DIM DC.B    4
+00008005  00                                 5  CNT DC.B    0
+00008006                                     6  MSG DS.B    4
+0000800A                                     7  
+0000800A                                     8  
+0000800A                                     9  ************************************
+0000800A                                    10  *AREA DEL MAIN
+0000800A                                    11  
+00008100                                    12      ORG $8100
+00008100                                    13  *GLI INDIRIZZI DELLA PERIFERICA SONO FISSI E CORRELATI AL FILE DI CONFIGURAZIONE
+00008100                                    14  
+00008100                                    15  *poichè si inizia con la modalità trasmettitore alloco prima la modalità output (porto B)
+00008100  =00002006                         16  PIADB	EQU    $2006	;indirizzo di PIA-B dato, usato in output 
+00008100  =00002007                         17  PIACB	EQU    $2007	;indirizzo di PIA-B controllo
+00008100                                    18  
+00008100                                    19  *poichè si utilizza dopo la modalità ricevitore alloco anche la modalità input (porto A)
+00008100  =00002004                         20  PIADA	EQU    $2004	;indirizzo di PIA-A dato, usato in output 
+00008100  =00002005                         21  PIACA	EQU    $2005	;indirizzo di PIA-A controllo
+00008100                                    22  
+00008100  4EB9 00008144                     23  MAIN    JSR OUT
+00008106                                    24  *DOPO AVER CONFIGURATO IL PORTO PER L'OUTPUT configuro i registri che vado ad impiegare
+00008106                                    25  
+00008106                                    26  ****************
+00008106                                    27  *A0=>NUM       *
+00008106                                    28  *A1=>PIACB     *
+00008106                                    29  *A2=>PIADB     *
+00008106                                    30  *D0=>DIM       *
+00008106                                    31  ****************
+00008106  207C 00008000                     32      MOVE.L  #NUM,A0
+0000810C  227C 00002007                     33      MOVE.L  #PIACB,A1
+00008112  247C 00002006                     34      MOVE.L  #PIADB,A2
+00008118  1039 00008004                     35  	MOVE.B	DIM,D0	
+0000811E                                    36  
+0000811E                                    37  
+0000811E  1212                              38  INVIO	MOVE.B	(A2),D1            ;lettura fittizia da PRB => serve per azzerare CRB7 dopo il primo carattere, altrimenti resta settato con l'ack
+00008120  1498                              39  	MOVE.B	(A0)+,(A2)	;carattere corrente da trasferire su bus di PIA porto B: dopo la scrittura di PRB, CB2 si abbassa
+00008122                                    40  *								;ci� fa abbassare CA1 sulla porta gemella dell'altro sistema generando 
+00008122                                    41  *								;un'interruzione che coincide con il segnale DATA READY
+00008122  5202                              42  	ADD.B		#1,D2		    ;incremento contatore elementi trasmessi
+00008124                                    43  
+00008124  1211                              44  ciclo	MOVE.B	(A1),D1		;In attesa di DATA ACKNOWLEDGE
+00008126  0201 0080                         45  	ANDI.B	#$80,D1				;aspetta che CRB7 divenga 1
+0000812A  67F8                              46  	BEQ	ciclo
+0000812C                                    47  
+0000812C  B042                              48  	CMP	D2,D0	;controllo se ho finito di trasmettere
+0000812E  66EE                              49  	BNE	INVIO
+00008130                                    50  
+00008130  4EB9 00008158                     51  FA2 JSR IN
+00008136  40C0                              52      MOVE.W  SR,D0   *STATUS REGISTER È UNA WORD
+00008138  0240 D8FF                         53  	ANDI.W	#$D8FF,D0 ;maschera per reg stato (stato utente, int abilitati)
+0000813C  46C0                              54  	MOVE.W	D0,SR	;pone liv int a 000
+0000813E                                    55  
+0000813E  4EF9 0000813E                     56  LOOP  	JMP LOOP	;ciclo caldo dove il processore attende interrupt		
+00008144                                    57  
+00008144                                    58  *********************************************************************************************************
+00008144                                    59  *INIZIALIZZAZIONE DELLA PIA: PORTO B	
+00008144                                    60  *	CRB |0 |0 |1 0 0 |1 |0 0|
+00008144                                    61  *	                   |	    |    |_____Controllo CB1: interruzioni DISABILITATE su IRQB, CB1 sensibile a fronte 1->0
+00008144                                    62  *		       |	    |		
+00008144                                    63  *		       |	    |________Accesso a DRB: il prossimo accesso ad indirizzo pari � per PRB
+00008144                                    64  *		       |____________ Controllo CB2: CRB5=1 significa linea di uscita, con gli altri due bit a 00 diventa alto su fronte 
+00008144                                    65  *                                             		attivo di CB1 e si riabbassa a seguito a scrittura su PRB
+00008144                                    66  *
+00008144                                    67  *	DRB=1 => PORTO B PORTO DI USCITA
+00008144                                    68  *
+00008144                                    69  ***********************************************************************************************************
+00008144                                    70  
+00008144                                    71  OUT 
+00008144  11FC 0000 2007                    72      MOVE.B  #0,PIACB ; SELEZIONIAMO IL REGISTRO DI DIREZIONE
+0000814A  11FC 00FF 2006                    73      MOVE.B  #$FF,PIADB
+00008150  11FC 0024 2007                    74      MOVE.B  #%00100100,PIACB ;CONFIGURO IL NODO A PER LAVORARE SOTTO polling
+00008156  4E75                              75      RTS
+00008158                                    76  
+00008158                                    77  
+00008158                                    78  IN  
+00008158  11FC 0000 2005                    79      MOVE.B  #0,PIACA ; SELEZIONIAMO IL REGISTRO DI DIREZIONE
+0000815E  11FC 0000 2004                    80      MOVE.B  #$00,PIADA
+00008164  11FC 0025 2005                    81      MOVE.B  #%00100101,PIACA ;CONFIGURO IL NODO A PER LAVORARE SOTTO INTERRUZIONE
+0000816A  4E75                              82      RTS
+0000816C                                    83  
+0000816C                                    84  *AREA MEMORIA DELLE INTERRUPT
+00008600                                    85      ORG $8600
+00008600                                    86  
+00008600                                    87  INT
+00008600  2F09                              88      MOVE.L  A1,-(A7)
+00008602  2F08                              89      MOVE.L  A0,-(A7)
+00008604  2F00                              90      MOVE.L  D0,-(A7)
+00008606                                    91  
+00008606  227C 00002004                     92  	MOVEA.L	#PIADA,A1
+0000860C  207C 00008006                     93  	MOVEA.L	#MSG,A0	;indirizzo area di salvataggio
+00008612  1039 00008005                     94  	MOVE.B	CNT,D0	;contatore corrente degli elementi ricevuti
+00008618                                    95  
+00008618                                    96  	
+00008618  1191 0000                         97  	MOVE.B 	(A1),(A0,D0)	;acquisisce il carattere e lo trasferisce in memoria
+0000861C                                    98  *						;la lettura da PRA fa abbassare CRA7 e CA2 => nell'altro sistema si abbassa CB1
+0000861C                                    99  *						;ci� corrisponde all'attivazione di CRB7 che funge da DATA ACKNOWLEDGE
+0000861C                                   100  	
+0000861C  5200                             101  	ADD.B	#1,D0
+0000861E  13C0 00008005                    102  	MOVE.B	D0,CNT
+00008624                                   103  
+00008624                                   104  
+00008624  201F                             105      MOVE.L  (A7)+,D0
+00008626  205F                             106      MOVE.L  (A7)+,A0
+00008628  225F                             107      MOVE.L  (A7)+,A1
+0000862A                                   108  
+0000862A  4E73                             109      RTE
+0000862C                                   110  
+0000862C                                   111      END MAIN
+
+No errors detected
+No warnings generated
