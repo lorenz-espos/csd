@@ -1,0 +1,161 @@
+*AREA DI MEMORIA
+    ORG $8000
+DIM DC.B    4
+CNT DC.B    0
+MSG DS.B    4
+
+
+
+    ORG $8100
+*AREA DEL MAIN
+*AREA PERIFERICHE
+PIADA   EQU    $2004
+PIACA   EQU    $2005
+PIADB   EQU    $2006
+PIACB   EQU    $2007
+
+MAIN    JSR IN
+    JSR OUT
+    MOVE.L  #PIACB,A1
+    MOVE.L  #PIADB,A2
+    MOVE.L  #MSG,A0
+
+*****************
+*   A0=>MSG     *
+*   A1=>PIACB   *
+*   A2=>PIADB   *
+*****************
+*ABILITO LE INTERRUPT
+    MOVE.W  SR,D0
+    ANDI.W  #$D8FF,D0
+    MOVE.W  D0,SR
+*SPORCO LO STATUS REGISTER INTERRUPT ABILITATE
+
+FA1 MOVE.B  DIM,D0
+    MOVE.B  CNT,D1
+    CMP.B   D0,D1
+    BNE FA1
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+*resetto il counter
+
+FA2 MOVE.B  #0,CNT
+*FACCIO UNA LETTURA FITTIZIA
+    MOVE.B  (A2),D1
+*EFFETTUO IL PRIMO INVIO
+    MOVE.B  (A0),(A2)
+    MOVE.B  #1,CNT
+
+LOOP    JMP LOOP    *loop caldo per non far terminare il programma
+
+
+
+
+
+
+OUT MOVE.B  #0,PIACB
+    MOVE.B  #$FF,PIADB *linea d'uscita
+    MOVE.B  #%00100101,PIACB *ABILITO L'HANDSHAKING E LE INTERRUPT
+    RTS
+
+IN  MOVE.B  #0,PIACA
+    MOVE.B  #0,PIADA *linea d'ingresso
+    MOVE.B  #%00100101,PIACA *ABILITO L'HANDSHAKING E LE INTERRUPT
+    RTS
+
+
+*AREA INTERRUPT TRASMISSIONE
+    ORG $8200
+*salvo il contesto sullo stack
+INT4    
+    MOVE.L  A0,-(A7)
+    MOVE.L  A1,-(A7)
+    MOVE.L  A2,-(A7)
+    MOVE.L  D0,-(A7)
+    MOVE.L  D1,-(A7)
+
+    MOVEA.L #MSG,A0
+    MOVEA.L #PIADB,A1
+    MOVE.B  DIM,D0
+    MOVE.B  CNT,D1
+
+*****************
+*   A0=>MSG     *
+*   A1=>PIADB   *
+*   D0=>CNT     *
+*****************
+
+    CMP.B   D1,D0
+    BEQ FINE
+*LETTURA FITTIZIA
+    MOVE.B    (A1),D2
+*INVIO IL MESSAGGIO SU PIADB
+    MOVE.B  (A0,D1),(A1)
+    ADD.B   #1,D1
+    MOVE.B  D1,CNT
+
+    
+
+FINE
+    MOVE.L  (A7)+,D1
+    MOVE.L  (A7)+,D0
+    MOVE.L  (A7)+,A2
+    MOVE.L  (A7)+,A1
+    MOVE.L  (A7)+,A0
+*ripristino il contesto
+    RTE
+
+
+*AREA INTERRUPT RICEZIONE
+    ORG $8300
+   * ORI.W  #$0700,SR
+*salvo il contesto sullo stack
+INT3 
+    MOVE.L  A0,-(A7)
+    MOVE.L  A1,-(A7)
+    MOVE.L  A2,-(A7)
+    MOVE.L  D0,-(A7)
+    MOVE.L  D1,-(A7)
+
+
+    MOVEA.L #MSG,A0
+    MOVEA.L #PIADA,A1
+    MOVE.B  CNT,D0
+
+*****************
+*   A0=>MSG     *
+*   A1=>PIADA   *
+*   D0=>CNT     *
+*****************
+
+*EFFETTUO LA LETTURA DAL PIADA
+    MOVE.B  (A1),(A0,D0)
+    ADD.B   #1,CNT
+    MOVE.B  CNT,D0
+
+
+
+    MOVE.L  (A7)+,D1
+    MOVE.L  (A7)+,D0
+    MOVE.L  (A7)+,A2
+    MOVE.L  (A7)+,A1
+    MOVE.L  (A7)+,A0
+*ripristino il contesto
+    RTE
+    END MAIN
+
+
+
+
+
+
+
+
+
+
+
+
+

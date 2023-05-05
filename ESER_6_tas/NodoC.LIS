@@ -1,0 +1,72 @@
+00000000                                     1  *AREA DI MEMORIA
+00008000                                     2      ORG $8000
+00008000  04 03 09 05                        3  NUM DC.B    4,3,9,5
+00008004  04                                 4  DIM DC.B    4
+00008005  00                                 5  CNT DC.B    0
+00008006                                     6  
+00008100                                     7      ORG $8100
+00008100                                     8  *AREA DEL MAIN
+00008100  =00002006                          9  PIADB   EQU $2006
+00008100  =00002007                         10  PIACB   EQU $2007
+00008100                                    11  
+00008100  4EB9 00008128                     12  MAIN    JSR OUT
+00008106                                    13  
+00008106  207C 00008000                     14      MOVEA.L #NUM,A0
+0000810C  227C 00002006                     15      MOVEA.L #PIADB,A1
+00008112                                    16     
+00008112                                    17      ***************
+00008112                                    18      *   A0=>NUM   *
+00008112                                    19      *   A1=>PIADB *
+00008112                                    20      ***************
+00008112                                    21  
+00008112                                    22  
+00008112                                    23  
+00008112                                    24  *EFFETTO LA LETTURA FITTIZIA E LA PRIMA SCRITTURA SULLA PIA (PORTO B)
+00008112  1011                              25      MOVE.B  (A1),D0
+00008114  1290                              26      MOVE.B  (A0),(A1)
+00008116  13FC 0001 00008005                27      MOVE.B  #1,CNT
+0000811E                                    28  
+0000811E                                    29  *ABILITO LE INTERRUPT
+0000811E  027C D8FF                         30      ANDI.W  #$D8FF,SR
+00008122                                    31  
+00008122  4EF9 00008122                     32  LOOP   JMP LOOP *loop caldo
+00008128                                    33         
+00008128                                    34  
+00008128                                    35  
+00008128                                    36  
+00008128  11FC 0000 2007                    37  OUT MOVE.B  #0,PIACB
+0000812E  11FC 00FF 2006                    38      MOVE.B  #$FF,PIADB *CONFIGURO LA LINEA DI OUTPUT
+00008134  11FC 0025 2007                    39      MOVE.B  #%00100101,PIACB 
+0000813A                                    40      *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
+0000813A  4E75                              41      RTS
+0000813C                                    42  
+0000813C                                    43  
+00008200                                    44      ORG $8200
+00008200                                    45  *AREA INTERRUPT TRASMISSIONE
+00008200  2F08                              46      MOVE.L  A0,-(A7)
+00008202  2F09                              47      MOVE.L  A1,-(A7)
+00008204  2F00                              48      MOVE.L  D0,-(A7)
+00008206                                    49  
+00008206  207C 00008000                     50      MOVEA.L #NUM,A0
+0000820C  227C 00002006                     51      MOVEA.L #PIADB,A1
+00008212  1039 00008005                     52      MOVE.B  CNT,D0
+00008218                                    53  
+00008218  B079 00008004                     54      CMP DIM,D0
+0000821E  6700 0010                         55      BEQ FINE
+00008222                                    56  *LETTURA FITTIZIA
+00008222  1211                              57      MOVE.B  (A1),D1
+00008224                                    58  *SCRIVO SUL BUFFER IL DATO DA INVIARE
+00008224  12B0 0000                         59      MOVE.B  (A0,D0),(A1)
+00008228  5200                              60      ADD.B   #1,D0
+0000822A  13C0 00008005                     61      MOVE.B  D0,CNT
+00008230                                    62  
+00008230                                    63  FINE
+00008230  201F                              64      MOVE.L  (A7)+,D0
+00008232  225F                              65      MOVE.L  (A7)+,A1
+00008234  205F                              66      MOVE.L  (A7)+,A0
+00008236  4E73                              67      RTE
+00008238                                    68  *RIPRISTINO IL CONTESTO
+00008238                                    69      END MAIN
+
+No errors detected
+No warnings generated

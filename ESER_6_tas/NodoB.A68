@@ -1,0 +1,143 @@
+*AREA DI MEMORIA
+    ORG $8000
+*L'IPOTESI DI BASE è QUELLA DI FARE ALTERNARE I DUE NODI A E C NELLA TRASMISSIONE
+MSA DS.B    4
+MSC DS.B    4
+DIM DC.B    4
+CNT DC.B    0
+CN2 DC.B    0
+SEM DC.B    0
+SA  DC.B    0
+SC  DC.B    0
+
+*uguale serve a tenere traccia dell'uguaglianza dei messaggi
+UGUALE  DS.B    4
+
+    ORG $8100
+*AREA DEL MAIN
+
+*PIA COLLEGATA AL NODO A
+PIADA   EQU $2004
+PIACA   EQU $2005
+*PIA COLLEGATA AL NODO C
+PIADAC  EQU $2008
+PIACAC  EQU $2009
+
+MAIN 
+*CONFIGURO LE DUE PIA A RICEVERE DAL NODO A E DAL NODO C I MESSAGGI   
+    JSR IN
+*ABILITO LE INTERRUPT
+    ANDI.W  #$D8FF,SR
+
+LOOP    JMP LOOP *loop caldo
+
+
+
+
+
+IN  MOVE.B  #0,PIACA
+    MOVE.B  #$00,PIADA *CONFIGURO LA LINEA DI INPUT
+    MOVE.B  #%00100101,PIACA 
+    *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
+
+    MOVE.B  #0,PIACAC
+    MOVE.B  #$00,PIADAC *CONFIGURO LA LINEA DI INPUT
+    MOVE.B  #%00100101,PIACAC 
+    *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
+    RTS
+
+CHECK 
+        MOVE.B  CNT,D5
+        MOVE.B  CN2,D6
+        MOVEA.L #UGUALE,A4
+        CMP D5,D6
+        BNE RIT
+        MOVE.B  #1,(A4,D5)
+
+RIT RTS
+
+
+
+
+
+
+*AREA DI MEMORIA INTERRUPT NODO A
+    ORG $8200
+INT3
+*maschera per le interruzioni
+	ORI.W	#$0700,SR			
+
+    TAS SEM
+    BNE SOA
+    MOVE.L  A0,-(A7)
+    MOVE.L  A1,-(A7)
+    MOVE.L  D0,-(A7)
+    MOVEA.L #PIADA,A0
+    MOVEA.L #MSA,A1    
+    MOVE.B CNT,D0
+    ***************
+    *  A0=>PIADA  *
+    *  A1=>MSA    *
+    *  D0=>CNT    * 
+    ***************
+
+    *EFFETTUO LA LETTURA
+    MOVE.B  (A0),(A1,D0)
+    ADD.B   #1,D0
+    MOVE.B  D0,CNT
+
+    JSR CHECK
+FIN2
+    MOVE.L  (A7)+,D0
+    MOVE.L  (A7)+,A1
+    MOVE.L  (A7)+,A0
+    MOVE.B  #0,SEM
+    MOVE.B  #0,SC
+    RTE
+
+SOA MOVE.B  #1,SA
+*alzo il flag di sospensione del nodo A
+    RTE
+
+
+
+*AREA DI MEMORIA INTERRUPT NODO C
+    ORG $8400
+INT4
+    TAS SEM
+    BNE SOC
+    MOVE.L  A0,-(A7)
+    MOVE.L  A1,-(A7)
+    MOVE.L  D0,-(A7)
+    MOVEA.L #PIADAC,A0
+    MOVEA.L #MSC,A1    
+    MOVE.B CN2,D0
+    ***************
+    *  A0=>PIADAC *
+    *  A1=>MSC    *
+    *  D0=>CN2    * 
+    ***************
+
+    *EFFETTUO LA LETTURA
+    MOVE.B  (A0),(A1,D0)
+    ADD.B   #1,D0
+    MOVE.B  D0,CN2
+
+    JSR CHECK
+FIN1
+    MOVE.L  (A7)+,D0
+    MOVE.L  (A7)+,A1
+    MOVE.L  (A7)+,A0
+    MOVE.B  #0,SEM
+    MOVE.B  #0,SA
+    RTE
+
+
+SOC MOVE.B  #1,SC
+*alzo il flag di sospensione del nodo C
+    RTE
+
+
+    END MAIN
+
+

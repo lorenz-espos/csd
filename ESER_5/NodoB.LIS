@@ -1,0 +1,148 @@
+00000000                                     1  *AREA DI MEMORIA
+00008000                                     2      ORG $8000
+00008000  04                                 3  DIM DC.B    4
+00008001  00                                 4  CNT DC.B    0
+00008002                                     5  MSG DS.B    4
+00008006                                     6  
+00008006                                     7  
+00008006                                     8  
+00008100                                     9      ORG $8100
+00008100                                    10  *AREA DEL MAIN
+00008100                                    11  *AREA PERIFERICHE
+00008100  =00002004                         12  PIADA   EQU    $2004
+00008100  =00002005                         13  PIACA   EQU    $2005
+00008100  =00002006                         14  PIADB   EQU    $2006
+00008100  =00002007                         15  PIACB   EQU    $2007
+00008100                                    16  
+00008100  4EB9 00008164                     17  MAIN    JSR IN
+00008106  227C 00002007                     18      MOVE.L  #PIACB,A1
+0000810C  247C 00002006                     19      MOVE.L  #PIADB,A2
+00008112  207C 00008002                     20      MOVE.L  #MSG,A0
+00008118                                    21  
+00008118                                    22  *****************
+00008118                                    23  *   A0=>MSG     *
+00008118                                    24  *   A1=>PIACB   *
+00008118                                    25  *   A2=>PIADB   *
+00008118                                    26  *****************
+00008118                                    27  *ABILITO LE INTERRUPT
+00008118  40C0                              28      MOVE.W  SR,D0
+0000811A  0240 D8FF                         29      ANDI.W  #$D8FF,D0
+0000811E  46C0                              30      MOVE.W  D0,SR
+00008120                                    31  *SPORCO LO STATUS REGISTER INTERRUPT ABILITATE
+00008120                                    32  
+00008120                                    33  
+00008120  1039 00008000                     34  FA1 MOVE.B  DIM,D0
+00008126  1239 00008001                     35      MOVE.B  CNT,D1
+0000812C  B200                              36      CMP.B   D0,D1
+0000812E  66F0                              37      BNE FA1
+00008130                                    38  *resetto il counter
+00008130                                    39  
+00008130  4EB9 00008150                     40  FA2 JSR OUT
+00008136  13FC 0000 00008001                41      MOVE.B  #0,CNT
+0000813E                                    42  
+0000813E                                    43  
+0000813E                                    44  
+0000813E                                    45  *FACCIO UNA LETTURA FITTIZIA
+0000813E  1212                              46      MOVE.B  (A2),D1
+00008140                                    47  *EFFETTUO IL PRIMO INVIO
+00008140  1490                              48      MOVE.B  (A0),(A2)
+00008142  13FC 0001 00008001                49      MOVE.B  #1,CNT
+0000814A                                    50  
+0000814A  4EF9 0000814A                     51  LOOP    JMP LOOP    *loop caldo per non far terminare il programma
+00008150                                    52  
+00008150                                    53  
+00008150                                    54  
+00008150                                    55  
+00008150                                    56  
+00008150                                    57  
+00008150  11FC 0000 2007                    58  OUT MOVE.B  #0,PIACB
+00008156  11FC 00FF 2006                    59      MOVE.B  #$FF,PIADB *linea d'uscita
+0000815C  11FC 0025 2007                    60      MOVE.B  #%00100101,PIACB *ABILITO L'HANDSHAKING E LE INTERRUPT
+00008162  4E75                              61      RTS
+00008164                                    62  
+00008164  11FC 0000 2005                    63  IN  MOVE.B  #0,PIACA
+0000816A  11FC 0000 2004                    64      MOVE.B  #0,PIADA *linea d'ingresso
+00008170  11FC 0025 2005                    65      MOVE.B  #%00100101,PIACA *ABILITO L'HANDSHAKING E LE INTERRUPT
+00008176  4E75                              66      RTS
+00008178                                    67  
+00008178                                    68  
+00008178                                    69  *AREA INTERRUPT TRASMISSIONE
+00008200                                    70      ORG $8200
+00008200                                    71  *salvo il contesto sullo stack
+00008200                                    72  INT4    
+00008200  2F08                              73      MOVE.L  A0,-(A7)
+00008202  2F09                              74      MOVE.L  A1,-(A7)
+00008204  2F0A                              75      MOVE.L  A2,-(A7)
+00008206  2F00                              76      MOVE.L  D0,-(A7)
+00008208  2F01                              77      MOVE.L  D1,-(A7)
+0000820A                                    78  
+0000820A  207C 00008002                     79      MOVEA.L #MSG,A0
+00008210  227C 00002006                     80      MOVEA.L #PIADB,A1
+00008216  1039 00008000                     81      MOVE.B  DIM,D0
+0000821C  1239 00008001                     82      MOVE.B  CNT,D1
+00008222                                    83  
+00008222                                    84  *****************
+00008222                                    85  *   A0=>MSG     *
+00008222                                    86  *   A1=>PIADB   *
+00008222                                    87  *   D0=>CNT     *
+00008222                                    88  *****************
+00008222                                    89  
+00008222  B001                              90      CMP.B   D1,D0
+00008224  6700 0010                         91      BEQ FINE
+00008228                                    92  *LETTURA FITTIZIA
+00008228  1411                              93      MOVE.B    (A1),D2
+0000822A                                    94  *INVIO IL MESSAGGIO SU PIADB
+0000822A  12B0 1000                         95      MOVE.B  (A0,D1),(A1)
+0000822E  5201                              96      ADD.B   #1,D1
+00008230  13C1 00008001                     97      MOVE.B  D1,CNT
+00008236                                    98  
+00008236                                    99  FINE
+00008236  221F                             100      MOVE.L  (A7)+,D1
+00008238  201F                             101      MOVE.L  (A7)+,D0
+0000823A  245F                             102      MOVE.L  (A7)+,A2
+0000823C  225F                             103      MOVE.L  (A7)+,A1
+0000823E  205F                             104      MOVE.L  (A7)+,A0
+00008240                                   105  *ripristino il contesto
+00008240  4E73                             106      RTE
+00008242                                   107  
+00008242                                   108  
+00008242                                   109  *AREA INTERRUPT RICEZIONE
+00008300                                   110      ORG $8300
+00008300                                   111     * ORI.W  #$0700,SR
+00008300                                   112  *salvo il contesto sullo stack
+00008300                                   113  INT3 
+00008300  2F08                             114      MOVE.L  A0,-(A7)
+00008302  2F09                             115      MOVE.L  A1,-(A7)
+00008304  2F0A                             116      MOVE.L  A2,-(A7)
+00008306  2F00                             117      MOVE.L  D0,-(A7)
+00008308  2F01                             118      MOVE.L  D1,-(A7)
+0000830A                                   119  
+0000830A                                   120  
+0000830A  207C 00008002                    121      MOVEA.L #MSG,A0
+00008310  227C 00002004                    122      MOVEA.L #PIADA,A1
+00008316  1039 00008001                    123      MOVE.B  CNT,D0
+0000831C                                   124  
+0000831C                                   125  *****************
+0000831C                                   126  *   A0=>MSG     *
+0000831C                                   127  *   A1=>PIADA   *
+0000831C                                   128  *   D0=>CNT     *
+0000831C                                   129  *****************
+0000831C                                   130  
+0000831C                                   131  *EFFETTUO LA LETTURA DAL PIADA
+0000831C  1191 0000                        132      MOVE.B  (A1),(A0,D0)
+00008320  5239 00008001                    133      ADD.B   #1,CNT
+00008326  1039 00008001                    134      MOVE.B  CNT,D0
+0000832C                                   135  
+0000832C                                   136  
+0000832C                                   137  
+0000832C  221F                             138      MOVE.L  (A7)+,D1
+0000832E  201F                             139      MOVE.L  (A7)+,D0
+00008330  245F                             140      MOVE.L  (A7)+,A2
+00008332  225F                             141      MOVE.L  (A7)+,A1
+00008334  205F                             142      MOVE.L  (A7)+,A0
+00008336                                   143  *ripristino il contesto
+00008336  4E73                             144      RTE
+00008338                                   145      END MAIN
+
+No errors detected
+No warnings generated
