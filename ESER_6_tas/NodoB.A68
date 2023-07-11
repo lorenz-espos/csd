@@ -6,9 +6,10 @@ MSC DS.B    4
 DIM DC.B    4
 CNT DC.B    0
 CN2 DC.B    0
+FLG DC.B    0
 SEM DC.B    0
-SA  DC.B    0
-SC  DC.B    0
+* SE 0 LAVORA C SE 1 LAVORA A
+* SE 1 SOSPESO C SE 0 SOSPESO A
 
 *uguale serve a tenere traccia dell'uguaglianza dei messaggi
 UGUALE  DS.B    4
@@ -22,10 +23,8 @@ PIACA   EQU $2005
 *PIA COLLEGATA AL NODO C
 PIADAC  EQU $2008
 PIACAC  EQU $2009
-
-MAIN 
-*CONFIGURO LE DUE PIA A RICEVERE DAL NODO A E DAL NODO C I MESSAGGI   
-    JSR IN
+*CONFIGURO LE DUE PIA A RICEVERE DAL NODO A E DAL NODO C I MESSAGGI    
+MAIN    JSR IN
 *ABILITO LE INTERRUPT
     ANDI.W  #$D8FF,SR
 
@@ -47,14 +46,42 @@ IN  MOVE.B  #0,PIACA
     RTS
 
 CHECK 
-        MOVE.B  CNT,D5
-        MOVE.B  CN2,D6
-        MOVEA.L #UGUALE,A4
-        CMP D5,D6
+*SALVO IL CONTESTO SULLO STACK
+       * LINK    A6,#0
+        MOVE.L  D0,-(A7)
+        MOVE.L  D1,-(A7)
+        MOVE.L  D2,-(A7)
+        MOVE.L  D3,-(A7)
+        MOVE.L  A0,-(A7)
+        MOVE.L  A1,-(A7)
+        MOVE.L  A2,-(A7)
+*verifico se i contatori sono uguali
+        MOVE.B  CNT,D0
+        MOVE.B  CN2,D1
+        CMP D0,D1
         BNE RIT
-        MOVE.B  #1,(A4,D5)
+        MOVEA.L #MSA,A0
+        MOVEA.L #MSC,A1
+        ADD #-1,D0
+*verifico se gli elementi in una determinata posizione sono uguali
+        MOVE.B  (A0,D0),D2
+        MOVE.B  (A1,D0),D3
+        CMP D2,D3
+        BNE RIT
+        MOVEA.L #UGUALE,A2
 
-RIT RTS
+        MOVE.B  #1,(A2,D0)
+
+*RIPRISTINO IL CONTESTO SULLO STACK
+RIT     MOVE.L  (A7)+,A2
+        MOVE.L  (A7)+,A1
+        MOVE.L  (A7)+,A0
+        MOVE.L  (A7)+,D3
+        MOVE.L  (A7)+,D2
+        MOVE.L  (A7)+,D1
+        MOVE.L  (A7)+,D0
+       * UNLK    A6
+    RTS
 
 
 
@@ -65,13 +92,19 @@ RIT RTS
     ORG $8200
 INT3
 *maschera per le interruzioni
-	ORI.W	#$0700,SR			
+	*ORI.W	#$0700,SR	
+    TAS SEM	
+    BNE SOA	
+    MOVE.B  FLG,D7
+    CMP #1,D7
+    *SE SONO SOSPESO ESCO
+    BNE SOA	
 
-    TAS SEM
-    BNE SOA
+* SE IL FLAG è 1 ALLORA POSSO LAVORARE
     MOVE.L  A0,-(A7)
     MOVE.L  A1,-(A7)
     MOVE.L  D0,-(A7)
+    *ELABORO IL DATO
     MOVEA.L #PIADA,A0
     MOVEA.L #MSA,A1    
     MOVE.B CNT,D0
@@ -87,28 +120,35 @@ INT3
     MOVE.B  D0,CNT
 
     JSR CHECK
+    *VERIFICO L'UGUAGLIANZA
 FIN2
     MOVE.L  (A7)+,D0
     MOVE.L  (A7)+,A1
     MOVE.L  (A7)+,A0
-    MOVE.B  #0,SEM
-    MOVE.B  #0,SC
-    RTE
 
-SOA MOVE.B  #1,SA
-*alzo il flag di sospensione del nodo A
-    RTE
+
+SOA MOVE.B  #0,FLG
+    MOVE.B  #0,SEM
+    JMP INT4
+SA2    RTE
 
 
 
 *AREA DI MEMORIA INTERRUPT NODO C
     ORG $8400
 INT4
-    TAS SEM
-    BNE SOC
+    TAS SEM	
+    BNE SOC	
+    MOVE.B  FLG,D7
+    CMP #0,D7
+    BNE SOC	
+
+ *   BNE SC2
+    *SE SONO SOSPESO ESCO
     MOVE.L  A0,-(A7)
     MOVE.L  A1,-(A7)
     MOVE.L  D0,-(A7)
+    *ALTRIMENTI ELABORO IL DATO
     MOVEA.L #PIADAC,A0
     MOVEA.L #MSC,A1    
     MOVE.B CN2,D0
@@ -128,16 +168,31 @@ FIN1
     MOVE.L  (A7)+,D0
     MOVE.L  (A7)+,A1
     MOVE.L  (A7)+,A0
+
+
+
+
+SOC MOVE.B  #1,FLG
     MOVE.B  #0,SEM
-    MOVE.B  #0,SA
-    RTE
 
-
-SOC MOVE.B  #1,SC
-*alzo il flag di sospensione del nodo C
-    RTE
+SC2 RTE
 
 
     END MAIN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

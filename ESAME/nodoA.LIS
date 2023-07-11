@@ -1,0 +1,208 @@
+00008000                                     1      ORG $8000
+00008000                                     2  *AREA DELLE VARIABILI
+00008000                                     3  *N   EQU 4
+00008000                                     4  *K   EQU 3
+00008000                                     5  *bug con equ allora non li uso
+00008000  04                                 6  N   DC.B    4
+00008001  03                                 7  K   DC.B    3
+00008002                                     8  MSB DS.B    4
+00008006                                     9  MSC DS.B    4
+0000800A  00                                10  CNK DC.B    0
+0000800B  00                                11  SEM DC.B    0
+0000800C  00                                12  FLG DC.B    0
+0000800D                                    13  *il flg può essere 0 per null 1 per far lavorare B  2 per far lavorare C
+0000800D  00                                14  CMB DC.B    0
+0000800E  00                                15  CMC DC.B    0
+0000800F  00                                16  CNB DC.B    0
+00008010  00                                17  CNC DC.B    0
+00008011                                    18      
+00008011                                    19      
+00008100                                    20      ORG $8100
+00008100                                    21  *AREA DEL MAIN
+00008100                                    22  
+00008100                                    23  *PIA COLLEGATA AL NODO C
+00008100  =00002004                         24  PIADAC   EQU $2004
+00008100  =00002005                         25  PIACAC   EQU $2005
+00008100                                    26  *PIA COLLEGATA AL NODO B
+00008100  =00002008                         27  PIADAB  EQU $2008
+00008100  =00002009                         28  PIACAB  EQU $2009
+00008100                                    29  *CONFIGURO LE DUE PIA A RICEVERE DAL NODO B E DAL NODO C I MESSAGGI    
+00008100  4EB9 00008110                     30  MAIN    JSR IN
+00008106                                    31  *ABILITO LE INTERRUPT
+00008106  027C D8FF                         32      ANDI.W  #$D8FF,SR
+0000810A                                    33  
+0000810A  4EF9 0000810A                     34  LOOP    JMP LOOP *loop caldo
+00008110                                    35  
+00008110                                    36  
+00008110  11FC 0000 2009                    37  IN  MOVE.B  #0,PIACAB
+00008116  11FC 0000 2008                    38      MOVE.B  #$00,PIADAB *CONFIGURO LA LINEA DI INPUT
+0000811C  11FC 0025 2009                    39      MOVE.B  #%00100101,PIACAB 
+00008122                                    40      *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
+00008122                                    41  
+00008122  11FC 0000 2005                    42      MOVE.B  #0,PIACAC
+00008128  11FC 0000 2004                    43      MOVE.B  #$00,PIADAC *CONFIGURO LA LINEA DI INPUT
+0000812E  11FC 0025 2005                    44      MOVE.B  #%00100101,PIACAC 
+00008134                                    45      *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
+00008134  4E75                              46      RTS
+00008136                                    47  
+00008136                                    48  
+00008136                                    49  
+00008700                                    50      ORG $8700
+00008700                                    51  *NODO B
+00008700  48E7 FFFC                         52  INT4    MOVEM.L A0-A5/D0-D7,-(A7)
+00008704  1039 0000800A                     53      MOVE.B  CNK,D0
+0000870A  B039 00008001                     54      CMP.B   K,D0
+00008710  6700 007C                         55      BEQ SPEGNI
+00008714                                    56      *SPEGO LE PIA
+00008714  4AF9 0000800B                     57      TAS SEM
+0000871A  6600 00BC                         58      BNE EXIT
+0000871E                                    59      *SE IL SEMAFORO è OCCUPATO ESCO
+0000871E  1039 0000800C                     60      MOVE.B  FLG,D0
+00008724  B03C 0002                         61      CMP.B   #2,D0
+00008728                                    62      *SE IL FLG è 2 ALLORA DEVE LAVORARE C
+00008728  6700 0130                         63      BEQ EXIB
+0000872C                                    64      *SE IL FLG è 1 ALLORA DEVE LAVORARE B
+0000872C  1039 0000800D                     65      MOVE.B  CMB,D0
+00008732  B03C 0002                         66      CMP.B   #2,D0
+00008736  6700 00A6                         67      BEQ SETF
+0000873A  207C 00002008                     68      MOVEA.L #PIADAB,A0
+00008740  227C 00008002                     69      MOVEA.L #MSB,A1
+00008746  1239 0000800F                     70      MOVE.B  CNB,D1
+0000874C                                    71  
+0000874C                                    72      *EFFETTUO LA LETTURA
+0000874C  1390 1000                         73      MOVE.B  (A0),(A1,D1)
+00008750  5201                              74      ADD.B   #1,D1
+00008752  13C1 0000800F                     75      MOVE.B  D1,CNB
+00008758                                    76      *VERIFICO SE HO FINITO DI LEGGERE UN MESSAGGIO
+00008758  B239 00008000                     77      CMP.B   N,D1
+0000875E  6600 0110                         78      BNE EXIN
+00008762  1439 0000800D                     79      MOVE.B  CMB,D2
+00008768  5202                              80      ADD.B   #1,D2
+0000876A  13C2 0000800D                     81      MOVE.B  D2,CMB
+00008770  13FC 0000 0000800F                82      MOVE.B  #0,CNB
+00008778                                    83      *AZZERO IL CONTATORE DI B
+00008778  13FC 0000 0000800C                84      MOVE.B  #0,FLG
+00008780                                    85      *SONO NEL CASO IN CUI ESCO E BASTA
+00008780  13FC 0000 0000800B                86      MOVE.B  #0,SEM
+00008788  4CDF 3FFF                         87      MOVEM.L (A7)+,A0-A5/D0-D7
+0000878C  4E73                              88      RTE
+0000878E                                    89  
+0000878E                                    90  
+0000878E                                    91  
+0000878E                                    92  
+0000878E                                    93  *CASO IN CUI HO ESEGUITO TUTTE LE K ITERAZIONI ALLORA SPENGO LA PIA
+0000878E  11FC 0000 2009                    94  SPEGNI  MOVE.B  #0,PIACAB
+00008794  11FC 0000 2005                    95      MOVE.B  #0,PIACAC
+0000879A  13FC 0000 0000800C                96      MOVE.B  #0,FLG
+000087A2  13FC 0000 0000800D                97      MOVE.B  #0,CMB
+000087AA  13FC 0000 0000800E                98      MOVE.B  #0,CMC
+000087B2  13FC 0000 0000800F                99      MOVE.B  #0,CNB
+000087BA  13FC 0000 00008010               100      MOVE.B  #0,CNC
+000087C2  13FC 0000 0000800A               101      MOVE.B  #0,CNK
+000087CA  13FC 0000 0000800B               102      MOVE.B  #0,SEM
+000087D2  4CDF 3FFF                        103      MOVEM.L (A7)+,A0-A5/D0-D7
+000087D6  4E73                             104      RTE
+000087D8                                   105  
+000087D8  4CDF 3FFF                        106  EXIT    MOVEM.L (A7)+,A0-A5/D0-D7
+000087DC                                   107     * MOVE.B  #2,FLG
+000087DC  4E73                             108      RTE
+000087DE                                   109  
+000087DE  13FC 0002 0000800C               110  SETF    MOVE.B  #2,FLG
+000087E6  13FC 0002 0000800C               111      MOVE.B  #2,FLG
+000087EE  1039 0000800E                    112      MOVE.B  CMC,D0
+000087F4  B03C 0001                        113      CMP.B   #1,D0
+000087F8                                   114      *VERIFICO SE C HA FINITO
+000087F8  6700 0016                        115      BEQ AK
+000087FC                                   116      *SE C NON HA FINITO RILASCIO IL SEMAFORO
+000087FC                                   117      *COSì IL PROSSIMO A RISVEGLIARSI SARà C
+000087FC  13FC 0000 0000800B               118      MOVE.B  #0,SEM
+00008804  4CDF 3FFF                        119      MOVEM.L (A7)+,A0-A5/D0-D7
+00008808                                   120      *RIPRISTINO IL CONTESTO
+00008808  4EF9 00008900                    121      JMP INT3
+0000880E  4E73                             122      RTE
+00008810                                   123  
+00008810  1239 0000800A                    124  AK  MOVE.B  CNK,D1
+00008816                                   125  * INCREMENTO IL CONTATORE DI K
+00008816  5201                             126      ADD.B   #1,D1
+00008818  13C1 0000800A                    127      MOVE.B  D1,CNK
+0000881E                                   128  *PREDISPONGO L'INIZIO DI UNA NUOVA ITERAZIONE
+0000881E  13FC 0000 0000800B               129      MOVE.B  #0,SEM
+00008826  13FC 0000 00008010               130      MOVE.B  #0,CNC
+0000882E  13FC 0000 0000800F               131      MOVE.B  #0,CNB
+00008836  13FC 0000 0000800D               132      MOVE.B  #0,CMB
+0000883E  13FC 0000 0000800E               133      MOVE.B  #0,CMC
+00008846  13FC 0000 0000800C               134      MOVE.B  #0,FLG
+0000884E  4CDF 3FFF                        135      MOVEM.L (A7)+,A0-A5/D0-D7
+00008852                                   136  *RIPRISTINO IL CONTESTO
+00008852  4EF9 00008700                    137      JMP INT4
+00008858  4E73                             138      RTE
+0000885A                                   139  
+0000885A  13FC 0002 0000800C               140  EXIB  MOVE.B  #2,FLG
+00008862  13FC 0000 0000800B               141      MOVE.B  #0,SEM
+0000886A  4CDF 3FFF                        142      MOVEM.L (A7)+,A0-A5/D0-D7
+0000886E  4E73                             143      RTE
+00008870                                   144  
+00008870  13FC 0001 0000800C               145  EXIN  MOVE.B  #1,FLG
+00008878  13FC 0000 0000800B               146      MOVE.B  #0,SEM
+00008880  4CDF 3FFF                        147      MOVEM.L (A7)+,A0-A5/D0-D7
+00008884  4E73                             148      RTE
+00008886                                   149  
+00008886                                   150  
+00008900                                   151      ORG $8900
+00008900                                   152  *    ORI.W	#$0700,SR	
+00008900                                   153  * UNA POSSIBILE SOLUZIONE PER LA GESTIONE DELLE INTERRUPT 
+00008900                                   154  *è QUELLA DI MASCHERARE LE INTERRUPT DI LIVELLO PIU' ALTO
+00008900                                   155  *IN QUESTO MODO NON POSSO MAI VENIRE INTERROTTO DA UNA INTERRUPT DI LIVELLO PIU' ALTO
+00008900                                   156  
+00008900                                   157  *NODO C
+00008900  48E7 FFFC                        158  INT3 MOVEM.L A0-A5/D0-D7,-(A7)
+00008904  1039 0000800A                    159      MOVE.B  CNK,D0
+0000890A  B039 00008001                    160      CMP.B   K,D0
+00008910                                   161  *SPEGO LE PIA
+00008910  6700 FE7C                        162      BEQ SPEGNI
+00008914                                   163  *se il semaforo è occupato esco
+00008914  4AF9 0000800B                    164      TAS SEM
+0000891A  6600 FEBC                        165      BNE EXIT
+0000891E  1039 0000800C                    166      MOVE.B  FLG,D0
+00008924  B03C 0001                        167      CMP.B   #1,D0
+00008928                                   168      *SE IL FLG è 1 ALLORA DEVE LAVORARE B
+00008928  6700 004E                        169      BEQ EXC
+0000892C                                   170      *SE IL FLG è 2 ALLORA DEVE LAVORARE C
+0000892C  1039 0000800E                    171      MOVE.B  CMC,D0
+00008932  B03C 0001                        172      CMP.B   #1,D0
+00008936  6700 0040                        173      BEQ EXC
+0000893A                                   174      *ASSUMO IL POSSESSO DELLA RISORSA SETTANDO FLG
+0000893A  13FC 0002 0000800C               175      MOVE.B  #2,FLG
+00008942                                   176      *effettuo la lettura
+00008942  207C 00002004                    177      MOVEA.L #PIADAC,A0
+00008948  227C 00008006                    178      MOVEA.L #MSC,A1
+0000894E  1239 00008010                    179      MOVE.B  CNC,D1
+00008954  1390 1000                        180      MOVE.B  (A0),(A1,D1)
+00008958  5201                             181      ADD.B   #1,D1
+0000895A  13C1 00008010                    182      MOVE.B  D1,CNC
+00008960  B239 00008000                    183      CMP.B   N,D1
+00008966  6600 002C                        184      BNE EXCI
+0000896A  1439 0000800E                    185      MOVE.B  CMC,D2
+00008970  5202                             186      ADD.B   #1,D2
+00008972  13C2 0000800E                    187      MOVE.B  D2,CMC
+00008978                                   188      *SONO NEL CASO IN CUI ESCO E BASTA
+00008978                                   189  
+00008978                                   190  
+00008978                                   191  
+00008978  13FC 0001 0000800C               192  EXC  MOVE.B  #1,FLG
+00008980  13FC 0000 0000800B               193      MOVE.B  #0,SEM
+00008988  4CDF 3FFF                        194      MOVEM.L (A7)+,A0-A5/D0-D7
+0000898C  4EF9 00008700                    195      JMP INT4
+00008992  4E73                             196      RTE
+00008994                                   197  
+00008994                                   198  
+00008994                                   199  
+00008994  13FC 0002 0000800C               200  EXCI    MOVE.B  #2,FLG
+0000899C  13FC 0000 0000800B               201      MOVE.B  #0,SEM
+000089A4  4CDF 3FFF                        202      MOVEM.L (A7)+,A0-A5/D0-D7
+000089A8  4E73                             203      RTE
+000089AA                                   204  
+000089AA                                   205      END MAIN
+
+No errors detected
+No warnings generated

@@ -19,17 +19,18 @@ MAIN    JSR OUT
     *   A1=>PIADB *
     ***************
 
-
+*ABILITO LE INTERRUPT
+    ANDI.W  #$D8FF,SR
 
 *EFFETTO LA LETTURA FITTIZIA E LA PRIMA SCRITTURA SULLA PIA (PORTO B)
     MOVE.B  (A1),D0
     MOVE.B  (A0),(A1)
     MOVE.B  #1,CNT
 
-*ABILITO LE INTERRUPT
-    ANDI.W  #$D8FF,SR
 
-LOOP   JMP LOOP *loop caldo
+
+LOOP   JMP LOOP 
+*loop caldo
        
 
 
@@ -40,9 +41,10 @@ OUT MOVE.B  #0,PIACB
     *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
     RTS
 
-
-    ORG $8200
 *AREA INTERRUPT TRASMISSIONE
+    ORG $8200
+INT3
+*interruzione per l'invio mediante porto B
     MOVE.L  A0,-(A7)
     MOVE.L  A1,-(A7)
     MOVE.L  D0,-(A7)
@@ -50,8 +52,9 @@ OUT MOVE.B  #0,PIACB
     MOVEA.L #NUM,A0
     MOVEA.L #PIADB,A1
     MOVE.B  CNT,D0
+    MOVE.B  DIM,D1
 
-    CMP DIM,D0
+    CMP D1,D0
     BEQ FINE
 *LETTURA FITTIZIA
     MOVE.B  (A1),D1
@@ -67,16 +70,4 @@ FINE
     RTE
 *RIPRISTINO IL CONTESTO
     END MAIN
-
-
-
-
-
-
-
-
-
-
-
-
 

@@ -1,0 +1,104 @@
+    ORG $8000
+*AREA DI MEMORIA
+NUM DC.B    4,2,1,5,1,10,20,30
+DIM DC.B    8
+CNT DC.B    0
+
+    ORG $8100
+*AREA DEL MAIN
+PIADB   EQU $2006
+PIACB   EQU $2007
+
+MAIN    JSR OUT
+
+    MOVEA.L #NUM,A0
+    MOVEA.L #PIADB,A1
+   
+    ***************
+    *   A0=>NUM   *
+    *   A1=>PIADB *
+    ***************
+
+
+*ABILITO LE INTERRUPT
+    ANDI.W  #$D8FF,SR
+
+
+*EFFETTO LA LETTURA FITTIZIA E LA PRIMA SCRITTURA SULLA PIA (PORTO B)
+    MOVE.B  (A1),D0
+    MOVE.B  (A0),(A1)
+    MOVE.B  #1,CNT
+
+
+LOOP   JMP LOOP 
+*loop caldo
+
+
+
+
+
+OUT MOVE.B  #0,PIACB
+    MOVE.B  #$FF,PIADB *CONFIGURO LA LINEA DI OUTPUT
+    MOVE.B  #%00100101,PIACB 
+    *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
+    RTS
+
+*AREA INTERRUPT TRASMISSIONE
+    ORG $8200
+
+INT4
+*interruzione per l'invio mediante porto B
+
+    MOVE.L  A0,-(A7)
+    MOVE.L  A1,-(A7)
+    MOVE.L  D0,-(A7)
+
+    MOVEA.L #NUM,A0
+    MOVEA.L #PIADB,A1
+    MOVE.B  CNT,D0
+    MOVE.B  DIM,D1
+
+    CMP D1,D0
+    BEQ FINE
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+*LETTURA FITTIZIA
+    MOVE.B  (A1),D1
+*SCRIVO SUL BUFFER IL DATO DA INVIARE
+    MOVE.B  (A0,D0),(A1)
+    ADD.B   #1,D0
+    MOVE.B  D0,CNT
+
+FINE
+    CMP.B DIM,D0
+    BEQ FINE2
+    MOVE.L  (A7)+,D0
+    MOVE.L  (A7)+,A1
+    MOVE.L  (A7)+,A0
+    RTE
+*RIPRISTINO IL CONTESTO
+FINE2
+    MOVE.L  (A7)+,D0
+    MOVE.L  (A7)+,A1
+    MOVE.L  (A7)+,A0
+    MOVE.B  #0,CNT
+    RTE
+    END MAIN
+
+
+
+
+
+
+
+
+
+
+

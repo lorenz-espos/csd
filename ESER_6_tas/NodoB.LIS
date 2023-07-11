@@ -6,139 +6,180 @@
 00008008  04                                 6  DIM DC.B    4
 00008009  00                                 7  CNT DC.B    0
 0000800A  00                                 8  CN2 DC.B    0
-0000800B  00                                 9  SEM DC.B    0
-0000800C  00                                10  SA  DC.B    0
-0000800D  00                                11  SC  DC.B    0
-0000800E                                    12  
-0000800E                                    13  *uguale serve a tenere traccia dell'uguaglianza dei messaggi
-0000800E                                    14  UGUALE  DS.B    4
-00008012                                    15  
-00008100                                    16      ORG $8100
-00008100                                    17  *AREA DEL MAIN
-00008100                                    18  
-00008100                                    19  *PIA COLLEGATA AL NODO A
-00008100  =00002004                         20  PIADA   EQU $2004
-00008100  =00002005                         21  PIACA   EQU $2005
-00008100                                    22  *PIA COLLEGATA AL NODO C
-00008100  =00002008                         23  PIADAC  EQU $2008
-00008100  =00002009                         24  PIACAC  EQU $2009
-00008100                                    25  
-00008100                                    26  MAIN 
-00008100                                    27  *CONFIGURO LE DUE PIA A RICEVERE DAL NODO A E DAL NODO C I MESSAGGI   
-00008100  4EB9 00008110                     28      JSR IN
-00008106                                    29  *ABILITO LE INTERRUPT
-00008106  027C D8FF                         30      ANDI.W  #$D8FF,SR
-0000810A                                    31  
-0000810A  4EF9 0000810A                     32  LOOP    JMP LOOP *loop caldo
+0000800B  00                                 9  FLG DC.B    0
+0000800C  00                                10  SEM DC.B    0
+0000800D                                    11  * SE 0 LAVORA C SE 1 LAVORA A
+0000800D                                    12  * SE 1 SOSPESO C SE 0 SOSPESO A
+0000800D                                    13  
+0000800D                                    14  *uguale serve a tenere traccia dell'uguaglianza dei messaggi
+0000800D                                    15  UGUALE  DS.B    4
+00008011                                    16  
+00008100                                    17      ORG $8100
+00008100                                    18  *AREA DEL MAIN
+00008100                                    19  
+00008100                                    20  *PIA COLLEGATA AL NODO A
+00008100  =00002004                         21  PIADA   EQU $2004
+00008100  =00002005                         22  PIACA   EQU $2005
+00008100                                    23  *PIA COLLEGATA AL NODO C
+00008100  =00002008                         24  PIADAC  EQU $2008
+00008100  =00002009                         25  PIACAC  EQU $2009
+00008100                                    26  *CONFIGURO LE DUE PIA A RICEVERE DAL NODO A E DAL NODO C I MESSAGGI    
+00008100  4EB9 00008110                     27  MAIN    JSR IN
+00008106                                    28  *ABILITO LE INTERRUPT
+00008106  027C D8FF                         29      ANDI.W  #$D8FF,SR
+0000810A                                    30  
+0000810A  4EF9 0000810A                     31  LOOP    JMP LOOP *loop caldo
+00008110                                    32  
 00008110                                    33  
 00008110                                    34  
 00008110                                    35  
 00008110                                    36  
-00008110                                    37  
-00008110  11FC 0000 2005                    38  IN  MOVE.B  #0,PIACA
-00008116  11FC 0000 2004                    39      MOVE.B  #$00,PIADA *CONFIGURO LA LINEA DI INPUT
-0000811C  11FC 0025 2005                    40      MOVE.B  #%00100101,PIACA 
-00008122                                    41      *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
-00008122                                    42  
-00008122  11FC 0000 2009                    43      MOVE.B  #0,PIACAC
-00008128  11FC 0000 2008                    44      MOVE.B  #$00,PIADAC *CONFIGURO LA LINEA DI INPUT
-0000812E  11FC 0025 2009                    45      MOVE.B  #%00100101,PIACAC 
-00008134                                    46      *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
-00008134  4E75                              47      RTS
-00008136                                    48  
-00008136                                    49  CHECK 
-00008136  1A39 00008009                     50          MOVE.B  CNT,D5
-0000813C  1C39 0000800A                     51          MOVE.B  CN2,D6
-00008142  287C 0000800E                     52          MOVEA.L #UGUALE,A4
-00008148  BC45                              53          CMP D5,D6
-0000814A  6600 0008                         54          BNE RIT
-0000814E  19BC 0001 5000                    55          MOVE.B  #1,(A4,D5)
-00008154                                    56  
-00008154  4E75                              57  RIT RTS
-00008156                                    58  
-00008156                                    59  
-00008156                                    60  
-00008156                                    61  
-00008156                                    62  
-00008156                                    63  
-00008156                                    64  *AREA DI MEMORIA INTERRUPT NODO A
-00008200                                    65      ORG $8200
-00008200                                    66  INT3
-00008200                                    67  *maschera per le interruzioni
-00008200  007C 0700                         68  	ORI.W	#$0700,SR			
-00008204                                    69  
-00008204  4AF9 0000800B                     70      TAS SEM
-0000820A  6600 0044                         71      BNE SOA
-0000820E  2F08                              72      MOVE.L  A0,-(A7)
-00008210  2F09                              73      MOVE.L  A1,-(A7)
-00008212  2F00                              74      MOVE.L  D0,-(A7)
-00008214  207C 00002004                     75      MOVEA.L #PIADA,A0
-0000821A  227C 00008000                     76      MOVEA.L #MSA,A1    
-00008220  1039 00008009                     77      MOVE.B CNT,D0
-00008226                                    78      ***************
-00008226                                    79      *  A0=>PIADA  *
-00008226                                    80      *  A1=>MSA    *
-00008226                                    81      *  D0=>CNT    * 
-00008226                                    82      ***************
-00008226                                    83  
-00008226                                    84      *EFFETTUO LA LETTURA
-00008226  1390 0000                         85      MOVE.B  (A0),(A1,D0)
-0000822A  5200                              86      ADD.B   #1,D0
-0000822C  13C0 00008009                     87      MOVE.B  D0,CNT
-00008232                                    88  
-00008232  4EB9 00008136                     89      JSR CHECK
-00008238                                    90  FIN2
-00008238  201F                              91      MOVE.L  (A7)+,D0
-0000823A  225F                              92      MOVE.L  (A7)+,A1
-0000823C  205F                              93      MOVE.L  (A7)+,A0
-0000823E  13FC 0000 0000800B                94      MOVE.B  #0,SEM
-00008246  13FC 0000 0000800D                95      MOVE.B  #0,SC
-0000824E  4E73                              96      RTE
-00008250                                    97  
-00008250  13FC 0001 0000800C                98  SOA MOVE.B  #1,SA
-00008258                                    99  *alzo il flag di sospensione del nodo A
-00008258  4E73                             100      RTE
-0000825A                                   101  
-0000825A                                   102  
-0000825A                                   103  
-0000825A                                   104  *AREA DI MEMORIA INTERRUPT NODO C
-00008400                                   105      ORG $8400
-00008400                                   106  INT4
-00008400  4AF9 0000800B                    107      TAS SEM
-00008406  6600 0044                        108      BNE SOC
-0000840A  2F08                             109      MOVE.L  A0,-(A7)
-0000840C  2F09                             110      MOVE.L  A1,-(A7)
-0000840E  2F00                             111      MOVE.L  D0,-(A7)
-00008410  207C 00002008                    112      MOVEA.L #PIADAC,A0
-00008416  227C 00008004                    113      MOVEA.L #MSC,A1    
-0000841C  1039 0000800A                    114      MOVE.B CN2,D0
-00008422                                   115      ***************
-00008422                                   116      *  A0=>PIADAC *
-00008422                                   117      *  A1=>MSC    *
-00008422                                   118      *  D0=>CN2    * 
-00008422                                   119      ***************
-00008422                                   120  
-00008422                                   121      *EFFETTUO LA LETTURA
-00008422  1390 0000                        122      MOVE.B  (A0),(A1,D0)
-00008426  5200                             123      ADD.B   #1,D0
-00008428  13C0 0000800A                    124      MOVE.B  D0,CN2
-0000842E                                   125  
-0000842E  4EB9 00008136                    126      JSR CHECK
-00008434                                   127  FIN1
-00008434  201F                             128      MOVE.L  (A7)+,D0
-00008436  225F                             129      MOVE.L  (A7)+,A1
-00008438  205F                             130      MOVE.L  (A7)+,A0
-0000843A  13FC 0000 0000800B               131      MOVE.B  #0,SEM
-00008442  13FC 0000 0000800C               132      MOVE.B  #0,SA
-0000844A  4E73                             133      RTE
-0000844C                                   134  
-0000844C                                   135  
-0000844C  13FC 0001 0000800D               136  SOC MOVE.B  #1,SC
-00008454                                   137  *alzo il flag di sospensione del nodo C
-00008454  4E73                             138      RTE
-00008456                                   139  
-00008456                                   140  
-00008456                                   141      END MAIN
+00008110  11FC 0000 2005                    37  IN  MOVE.B  #0,PIACA
+00008116  11FC 0000 2004                    38      MOVE.B  #$00,PIADA *CONFIGURO LA LINEA DI INPUT
+0000811C  11FC 0025 2005                    39      MOVE.B  #%00100101,PIACA 
+00008122                                    40      *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
+00008122                                    41  
+00008122  11FC 0000 2009                    42      MOVE.B  #0,PIACAC
+00008128  11FC 0000 2008                    43      MOVE.B  #$00,PIADAC *CONFIGURO LA LINEA DI INPUT
+0000812E  11FC 0025 2009                    44      MOVE.B  #%00100101,PIACAC 
+00008134                                    45      *CONFIGURO LA PIA PER FUNZIONARE IN MODALITA' HANDSHAKING E SOTTO INT
+00008134  4E75                              46      RTS
+00008136                                    47  
+00008136                                    48  CHECK 
+00008136                                    49  *SALVO IL CONTESTO SULLO STACK
+00008136                                    50         * LINK    A6,#0
+00008136  2F00                              51          MOVE.L  D0,-(A7)
+00008138  2F01                              52          MOVE.L  D1,-(A7)
+0000813A  2F02                              53          MOVE.L  D2,-(A7)
+0000813C  2F03                              54          MOVE.L  D3,-(A7)
+0000813E  2F08                              55          MOVE.L  A0,-(A7)
+00008140  2F09                              56          MOVE.L  A1,-(A7)
+00008142  2F0A                              57          MOVE.L  A2,-(A7)
+00008144                                    58  *verifico se i contatori sono uguali
+00008144  1039 00008009                     59          MOVE.B  CNT,D0
+0000814A  1239 0000800A                     60          MOVE.B  CN2,D1
+00008150  B240                              61          CMP D0,D1
+00008152  6600 002C                         62          BNE RIT
+00008156  207C 00008000                     63          MOVEA.L #MSA,A0
+0000815C  227C 00008004                     64          MOVEA.L #MSC,A1
+00008162  0640 FFFF                         65          ADD #-1,D0
+00008166                                    66  *verifico se gli elementi in una determinata posizione sono uguali
+00008166  1430 0000                         67          MOVE.B  (A0,D0),D2
+0000816A  1631 0000                         68          MOVE.B  (A1,D0),D3
+0000816E  B642                              69          CMP D2,D3
+00008170  6600 000E                         70          BNE RIT
+00008174  247C 0000800D                     71          MOVEA.L #UGUALE,A2
+0000817A                                    72  
+0000817A  15BC 0001 0000                    73          MOVE.B  #1,(A2,D0)
+00008180                                    74  
+00008180                                    75  *RIPRISTINO IL CONTESTO SULLO STACK
+00008180  245F                              76  RIT     MOVE.L  (A7)+,A2
+00008182  225F                              77          MOVE.L  (A7)+,A1
+00008184  205F                              78          MOVE.L  (A7)+,A0
+00008186  261F                              79          MOVE.L  (A7)+,D3
+00008188  241F                              80          MOVE.L  (A7)+,D2
+0000818A  221F                              81          MOVE.L  (A7)+,D1
+0000818C  201F                              82          MOVE.L  (A7)+,D0
+0000818E                                    83         * UNLK    A6
+0000818E  4E75                              84      RTS
+00008190                                    85  
+00008190                                    86  
+00008190                                    87  
+00008190                                    88  
+00008190                                    89  
+00008190                                    90  
+00008190                                    91  *AREA DI MEMORIA INTERRUPT NODO A
+00008200                                    92      ORG $8200
+00008200                                    93  INT3
+00008200                                    94  *maschera per le interruzioni
+00008200                                    95  	*ORI.W	#$0700,SR	
+00008200  4AF9 0000800C                     96      TAS SEM	
+00008206  6600 0048                         97      BNE SOA	
+0000820A  1E39 0000800B                     98      MOVE.B  FLG,D7
+00008210  BE7C 0001                         99      CMP #1,D7
+00008214                                   100      *SE SONO SOSPESO ESCO
+00008214  6600 003A                        101      BNE SOA	
+00008218                                   102  
+00008218                                   103  * SE IL FLAG è 1 ALLORA POSSO LAVORARE
+00008218  2F08                             104      MOVE.L  A0,-(A7)
+0000821A  2F09                             105      MOVE.L  A1,-(A7)
+0000821C  2F00                             106      MOVE.L  D0,-(A7)
+0000821E                                   107      *ELABORO IL DATO
+0000821E  207C 00002004                    108      MOVEA.L #PIADA,A0
+00008224  227C 00008000                    109      MOVEA.L #MSA,A1    
+0000822A  1039 00008009                    110      MOVE.B CNT,D0
+00008230                                   111      ***************
+00008230                                   112      *  A0=>PIADA  *
+00008230                                   113      *  A1=>MSA    *
+00008230                                   114      *  D0=>CNT    * 
+00008230                                   115      ***************
+00008230                                   116  
+00008230                                   117      *EFFETTUO LA LETTURA
+00008230  1390 0000                        118      MOVE.B  (A0),(A1,D0)
+00008234  5200                             119      ADD.B   #1,D0
+00008236  13C0 00008009                    120      MOVE.B  D0,CNT
+0000823C                                   121  
+0000823C  4EB9 00008136                    122      JSR CHECK
+00008242                                   123      *VERIFICO L'UGUAGLIANZA
+00008242                                   124  FIN2
+00008242  201F                             125      MOVE.L  (A7)+,D0
+00008244  225F                             126      MOVE.L  (A7)+,A1
+00008246  205F                             127      MOVE.L  (A7)+,A0
+00008248  13FC 0000 0000800C               128      MOVE.B  #0,SEM
+00008250                                   129  
+00008250                                   130  
+00008250  13FC 0000 0000800B               131  SOA MOVE.B  #0,FLG
+00008258  13FC 0000 0000800C               132      MOVE.B  #0,SEM
+00008260  4EF9 00008400                    133      JMP INT4
+00008266  4E73                             134  SA2    RTE
+00008268                                   135  
+00008268                                   136  
+00008268                                   137  
+00008268                                   138  *AREA DI MEMORIA INTERRUPT NODO C
+00008400                                   139      ORG $8400
+00008400                                   140  INT4
+00008400  4AF9 0000800C                    141      TAS SEM	
+00008406  6600 0040                        142      BNE SOC	
+0000840A  1E39 0000800B                    143      MOVE.B  FLG,D7
+00008410  BE7C 0000                        144      CMP #0,D7
+00008414  6600 0032                        145      BNE SOC	
+00008418                                   146  
+00008418                                   147   *   BNE SC2
+00008418                                   148      *SE SONO SOSPESO ESCO
+00008418  2F08                             149      MOVE.L  A0,-(A7)
+0000841A  2F09                             150      MOVE.L  A1,-(A7)
+0000841C  2F00                             151      MOVE.L  D0,-(A7)
+0000841E                                   152      *ALTRIMENTI ELABORO IL DATO
+0000841E  207C 00002008                    153      MOVEA.L #PIADAC,A0
+00008424  227C 00008004                    154      MOVEA.L #MSC,A1    
+0000842A  1039 0000800A                    155      MOVE.B CN2,D0
+00008430                                   156      ***************
+00008430                                   157      *  A0=>PIADAC *
+00008430                                   158      *  A1=>MSC    *
+00008430                                   159      *  D0=>CN2    * 
+00008430                                   160      ***************
+00008430                                   161  
+00008430                                   162      *EFFETTUO LA LETTURA
+00008430  1390 0000                        163      MOVE.B  (A0),(A1,D0)
+00008434  5200                             164      ADD.B   #1,D0
+00008436  13C0 0000800A                    165      MOVE.B  D0,CN2
+0000843C                                   166  
+0000843C  4EB9 00008136                    167      JSR CHECK
+00008442                                   168  FIN1
+00008442  201F                             169      MOVE.L  (A7)+,D0
+00008444  225F                             170      MOVE.L  (A7)+,A1
+00008446  205F                             171      MOVE.L  (A7)+,A0
+00008448                                   172  
+00008448                                   173  
+00008448                                   174  
+00008448                                   175  
+00008448  13FC 0001 0000800B               176  SOC MOVE.B  #1,FLG
+00008450  13FC 0000 0000800C               177      MOVE.B  #0,SEM
+00008458                                   178  
+00008458  4E73                             179  SC2 RTE
+0000845A                                   180  
+0000845A                                   181  
+0000845A                                   182      END MAIN
 
 No errors detected
 No warnings generated
